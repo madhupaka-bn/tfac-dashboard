@@ -1,43 +1,33 @@
 import { create } from "zustand"
 
-interface ApiOrder {
+interface Customer {
+  customer_id: Number, 
   customer_name: string
   customer_phone: string
   customer_email: string
   shipping_address?: string
-  order_id: string
-  razorpay_payment_id: string
-  payment_status: "Paid" | "Failed" | "Pending"
-  created_at: string
-  payment_date: string
-  product: {
-    id?: number
-    name: string
-    size?: string
-    price: number
-    quantity: number
-  }
-  paid_amount: number
+  pincode?: string, 
+  total_orders?: Number
 }
 
-interface OrdersStore {
-  items: ApiOrder[]
+interface CustomersStore {
+  items: Customer[]
   loading: boolean
   error: string | null
   totalPages: number
   totalItems: number
 
-  fetchOrders: (page?: number, limit?: number, search?: string) => Promise<void>
+  fetchCustomers: (page?: number, limit?: number, search?: string) => Promise<void>
 }
 
-export const useOrdersStore = create<OrdersStore>((set) => ({
+export const useCustomersStore = create<CustomersStore>((set) => ({
   items: [],
   loading: false,
   error: null,
   totalPages: 0,
   totalItems: 0,
 
-  fetchOrders: async (page = 1, limit = 10, search = "") => {
+  fetchCustomers: async (page = 1, limit = 10, search = "") => {
     set({
       loading: true,
       error: null,
@@ -52,17 +42,16 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
       })
 
       const response = await fetch(
-        `http://localhost:3000/api/v1/tfac/get-orders?${params}`,
+        `http://localhost:3000/api/v1/tfac/get-customers?${params}`,
         {
           headers: { secret_key: "tfac-1108-dashboard" },
         }
       )
 
-      if (!response.ok) throw new Error("Failed to fetch orders")
+      if (!response.ok) throw new Error("Failed to fetch customers")
 
       const { data, totalPages, totalItems } = await response.json()
 
-      console.log(data, totalPages, totalItems, "ORDER.TS: 65"); 
       set({
         items: data ?? [],
         totalPages: totalPages ?? 0,

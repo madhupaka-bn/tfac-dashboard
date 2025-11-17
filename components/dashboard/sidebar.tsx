@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
-import { Package, ShoppingCart, FileText, LogOut, PanelRight } from "lucide-react"
+import { Package, ShoppingCart, FileText, LogOut, PanelRight, Users   } from "lucide-react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -12,9 +12,11 @@ export function Sidebar() {
 
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: Package },
+    { href: "/dashboard/customers", label: "Customers", icon: Users },
     { href: "/dashboard/products", label: "Products", icon: Package },
     { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
     { href: "/dashboard/content", label: "Content", icon: FileText },
+
   ]
 
   const handleLogout = () => {

@@ -1,49 +1,67 @@
 "use client"
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Product } from "@/store/products"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { useCallback, useState } from "react"
+import { debounce } from "@/app/constUtil"
 
 interface Order {
-  id: number
+  id: string
   razorpay_id: string
-  status: "Paid" | "Failed" | "Pending"
+  status: "Success" | "Failed" | "Pending" | "Paid"
   userName: string
   email: string
   phone: string
-  product_id: Number 
-  product?: Product
-  address: string
+  product?: {
+    name: string
+    size?: string
+    price?: number
+    quantity?: number
+  }
   amount: number
   date: string
 }
 
 interface OrdersTableProps {
   orders: Order[]
+  loading: boolean
+  currentPage: number
+  totalPages: number
+  search: string
+  onSearch: (value: string) => void
+  onPageChange: (page: number) => void
 }
 
-export function OrdersTable({ orders }: OrdersTableProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
+export function OrdersTable({
+  orders,
+  loading,
+  currentPage,
+  totalPages,
+  search,
+  onSearch,
+  onPageChange,
+}: OrdersTableProps) {
 
-  console.log(orders) ;
+  const debouncedSearch = useCallback(
+  debounce((value: string) => {
+    onSearch(value);     // Your search API call or filter logic
+    onPageChange(1);     // Reset page
+  }, 400),
+  []
+);
 
-  const filteredOrders = orders.filter(
-    (o) =>
-      o.razorpay_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
-
-  const itemsPerPage = 10
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage)
-
+  const [localSearch, setLocalSearch] = useState(search);
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "Success":
       case "Paid":
         return "bg-green-500/10 text-green-600"
       case "Failed":
@@ -57,74 +75,104 @@ export function OrdersTable({ orders }: OrdersTableProps) {
 
   return (
     <div className="space-y-4">
+      {/* SEARCH INPUT */}
       <Input
-        placeholder="Search by order ID, name, or email..."
-        value={searchTerm}
+        placeholder="Search by order ID, Razorpay ID, name, or email..."
+        value={localSearch}
         onChange={(e) => {
-          setSearchTerm(e.target.value)
-          setCurrentPage(1)
+          const value = e.target.value ;
+          setLocalSearch(value)
+          debouncedSearch(value)
         }}
         className="max-w-sm bg-background/50"
       />
 
+      {/* TABLE */}
       <div className="rounded-lg border border-accent/10 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-card/50 border-accent/10">
-              <TableHead className="text-foreground font-semibold">Order ID</TableHead>
-              <TableHead className="text-foreground font-semibold">Status</TableHead>
-              <TableHead className="text-foreground font-semibold">Name</TableHead>
-              <TableHead className="text-foreground font-semibold">Email</TableHead>
-              <TableHead className="text-foreground font-semibold">Product</TableHead>
-              <TableHead className="text-foreground font-semibold">Phone</TableHead>
-              <TableHead className="text-foreground font-semibold">Amount</TableHead>
-              <TableHead className="text-foreground font-semibold">Date</TableHead>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Razorpay ID</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Date</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {paginatedOrders.map((order) => (
-              <TableRow key={order.id} className="border-accent/10 hover:bg-card/30">
-                <TableCell className="text-foreground font-mono text-sm">{order.razorpay_id}</TableCell>
-                <TableCell>
-                  <Badge className={`${getStatusColor(order.status)}`}>{order.status}</Badge>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-10 text-foreground/60">
+                  Loading orders...
                 </TableCell>
-                <TableCell className="text-foreground">{order.userName}</TableCell>
-                <TableCell className="text-foreground/70">{order.email}</TableCell>
-                <TableCell className="text-foreground/70">{order?.product?.name}</TableCell>
-                <TableCell className="text-foreground">{order.phone}</TableCell>
-                <TableCell className="text-accent font-semibold">₹{order.amount}</TableCell>
-                <TableCell className="text-foreground/70 text-sm">{order.date}</TableCell>
               </TableRow>
-            ))}
+            ) : orders.length > 0 ? (
+              orders.map((order) => (
+                <TableRow key={order.id} className="border-accent/10 hover:bg-card/30">
+                  <TableCell className="font-mono text-sm">{order.id}</TableCell>
+                  <TableCell className="font-mono text-sm">{order.razorpay_id}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{order.userName}</TableCell>
+                  <TableCell className="text-foreground/70">{order.email}</TableCell>
+                  <TableCell className="text-foreground/70">
+                    {order.product?.name || "N/A"}
+                    {order.product?.size && (
+                      <span className="ml-1 text-xs text-foreground/50">
+                        ({order.product.size})
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>{order.phone}</TableCell>
+                  <TableCell className="font-semibold text-accent">₹{order.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-sm text-foreground/70">{order.date}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-10 text-foreground/60">
+                  No orders found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-foreground/60">
-          Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of{" "}
-          {filteredOrders.length} orders
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 text-sm rounded border border-accent/20 text-foreground hover:bg-accent/10 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="px-3 py-1 text-sm text-foreground">
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-foreground/60">
             Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 text-sm rounded border border-accent/20 text-foreground hover:bg-accent/10 disabled:opacity-50"
-          >
-            Next
-          </button>
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm rounded border border-accent/20 text-foreground hover:bg-accent/10 disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm rounded border border-accent/20 text-foreground hover:bg-accent/10 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
