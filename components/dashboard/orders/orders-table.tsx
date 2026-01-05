@@ -93,7 +93,7 @@ export function OrdersTable({
           <TableHeader>
             <TableRow className="bg-card/50 border-accent/10">
               <TableHead>Order ID</TableHead>
-              <TableHead>Razorpay ID</TableHead>
+              <TableHead>Payment ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
