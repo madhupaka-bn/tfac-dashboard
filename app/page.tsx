@@ -5,16 +5,26 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const router = useRouter()
+   const { toast } = useToast()
 
   const handleLogin = () => {
     if (email.toLowerCase()!='info@teesforacause.co' && password!='Info@2025$$') {
       sessionStorage.setItem("isAuthenticated", "true")
       router.push("/dashboard")
+    }
+    else {
+       toast({
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
     }
   }
 
