@@ -15,7 +15,6 @@ import { debounce } from "@/app/constUtil"
 
 interface Order {
   id: string
-  razorpay_id: string
   status: "Success" | "Failed" | "Pending" | "Paid"
   userName: string
   instamojo_payment_id: string
@@ -79,7 +78,7 @@ export function OrdersTable({
     <div className="space-y-4">
       {/* SEARCH INPUT */}
       <Input
-        placeholder="Search by order ID, Razorpay ID, name, or email..."
+        placeholder="Search by order ID, Payment Id, name, or email..."
         value={localSearch}
         onChange={(e) => {
           const value = e.target.value ;
