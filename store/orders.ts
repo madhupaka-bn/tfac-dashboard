@@ -52,7 +52,7 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
       })
 
       const response = await fetch(
-        `http://localhost:3000/api/v1/tfac/get-orders?${params}`,
+        `https://bn-new-api.balancenutritiononline.com/api/v1/tfac/get-orders?${params}`,
         {
           headers: { secret_key: "tfac-1108-dashboard" },
         }
