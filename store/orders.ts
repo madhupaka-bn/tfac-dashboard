@@ -7,7 +7,7 @@ interface ApiOrder {
   shipping_address?: string
   order_id: string
   instamojo_payment_id: string
-  payment_status: "Paid" | "Failed" | "Pending"
+  payment_status: "Success" | "Failed" | "Pending"
   created_at: string
   payment_date: string
   product: {
@@ -27,17 +27,16 @@ interface OrdersStore {
   totalPages: number
   totalItems: number
 
-  status: "" | "Paid" | "Failed" | "Pending"
+  status: "all" | "Success" | "Failed" | "Pending"
 
-  setStatus: (status: "" | "Paid" | "Failed" | "Pending") => void
+  setStatus: (status: "all" | "Success" | "Failed" | "Pending") => void
   fetchOrders: (
     page?: number,
     limit?: number,
     search?: string,
-    status?: "" | "Paid" | "Failed" | "Pending"
+    status?: "all" | "Success" | "Failed" | "Pending"
   ) => Promise<void>
 }
-
 
 export const useOrdersStore = create<OrdersStore>((set, get) => ({
   items: [],
@@ -46,7 +45,7 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
   totalPages: 0,
   totalItems: 0,
 
-  status: "",
+  status: "all",
 
   setStatus: (status) => set({ status }),
 
@@ -64,7 +63,8 @@ export const useOrdersStore = create<OrdersStore>((set, get) => ({
         page: String(page),
         limit: String(limit),
         ...(search && { search }),
-        ...(currentStatus && { status: currentStatus }),
+        // Only add status param if it's not "all"
+        ...(currentStatus !== "all" && { status: currentStatus }),
       })
 
       const response = await fetch(

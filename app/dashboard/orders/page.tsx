@@ -5,18 +5,18 @@ import { useOrdersStore } from "@/store/orders"
 import { OrdersTable } from "@/components/dashboard/orders/orders-table"
 
 export default function OrdersPage() {
-  const { items: orders, totalPages, loading, fetchOrders } = useOrdersStore()
+  const { items: orders, totalPages, loading, fetchOrders, status, setStatus } = useOrdersStore()
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState("")
 
-  // Fetch data whenever page/search changes
+  // Fetch data whenever page/search/status changes
   useEffect(() => {
-    fetchOrders(page, 10, search)
-  }, [page, search])
+    fetchOrders(page, 10, search, status)
+  }, [page, search, status, fetchOrders])
 
   // Transform API data to OrdersTable format
-  const transformedOrders = orders.map(order => ({
+  const transformedOrders = orders.map((order) => ({
     id: order.order_id,
     instamojo_payment_id: order.instamojo_payment_id,
     status: order.payment_status,
@@ -28,19 +28,15 @@ export default function OrdersPage() {
       name: order.product?.name || "N/A",
       size: order.product?.size,
       price: order.product?.price,
-      quantity: order.product?.quantity
+      quantity: order.product?.quantity,
     },
     address: order.shipping_address || "",
-    // pincode: order.pincode || "",
     amount: order.paid_amount,
-    date: new Date(order.payment_date || order.created_at).toLocaleDateString(
-      "en-IN",
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }
-    ),
+    date: new Date(order.payment_date || order.created_at).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }),
   }))
 
   return (
@@ -56,7 +52,9 @@ export default function OrdersPage() {
         currentPage={page}
         totalPages={totalPages}
         search={search}
+        status={status}
         onSearch={setSearch}
+        onStatusChange={setStatus}
         onPageChange={setPage}
       />
     </div>

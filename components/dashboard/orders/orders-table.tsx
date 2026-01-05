@@ -10,6 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCallback, useState } from "react"
 import { debounce } from "@/app/constUtil"
 
@@ -26,7 +33,7 @@ interface Order {
     price?: number
     quantity?: number
   }
-  address: String, 
+  address: String
   amount: number
   date: string
 }
@@ -37,7 +44,9 @@ interface OrdersTableProps {
   currentPage: number
   totalPages: number
   search: string
+  status: "all" | "Success" | "Failed" | "Pending"
   onSearch: (value: string) => void
+  onStatusChange: (value: "all" | "Success" | "Failed" | "Pending") => void
   onPageChange: (page: number) => void
 }
 
@@ -47,19 +56,21 @@ export function OrdersTable({
   currentPage,
   totalPages,
   search,
+  status,
   onSearch,
+  onStatusChange,
   onPageChange,
 }: OrdersTableProps) {
-
   const debouncedSearch = useCallback(
-  debounce((value: string) => {
-    onSearch(value);     // Your search API call or filter logic
-    onPageChange(1);     // Reset page
-  }, 400),
-  []
-);
+    debounce((value: string) => {
+      onSearch(value)
+      onPageChange(1)
+    }, 400),
+    []
+  )
 
-  const [localSearch, setLocalSearch] = useState(search);
+  const [localSearch, setLocalSearch] = useState(search)
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Success":
@@ -76,17 +87,39 @@ export function OrdersTable({
 
   return (
     <div className="space-y-4">
-      {/* SEARCH INPUT */}
-      <Input
-        placeholder="Search by order ID, Payment Id, name, or email..."
-        value={localSearch}
-        onChange={(e) => {
-          const value = e.target.value ;
-          setLocalSearch(value)
-          debouncedSearch(value)
-        }}
-        className="max-w-sm bg-background/50"
-      />
+      {/* FILTERS ROW */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* SEARCH INPUT */}
+        <Input
+          placeholder="Search by order ID, Payment Id, name, or email..."
+          value={localSearch}
+          onChange={(e) => {
+            const value = e.target.value
+            setLocalSearch(value)
+            debouncedSearch(value)
+          }}
+          className="flex-1 max-w-md bg-background/50"
+        />
+
+        {/* STATUS FILTER */}
+        <Select
+          value={status}
+          onValueChange={(value) => {
+            onStatusChange(value as "all" | "Success" | "Failed" | "Pending")
+            onPageChange(1) // Reset to first page when filter changes
+          }}
+        >
+          <SelectTrigger className="w-[180px] bg-background/50">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Success">Success</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* TABLE */}
       <div className="rounded-lg border border-accent/10 overflow-hidden">
@@ -103,14 +136,13 @@ export function OrdersTable({
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Shipping Address</TableHead>
-              {/* <TableHead>Pincode</TableHead> */}
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-10 text-foreground/60">
+                <TableCell colSpan={10} className="text-center py-10 text-foreground/60">
                   Loading orders...
                 </TableCell>
               </TableRow>
@@ -135,15 +167,18 @@ export function OrdersTable({
                     )}
                   </TableCell>
                   <TableCell>{order.phone}</TableCell>
-                  <TableCell className="font-semibold text-accent">₹{order.amount.toFixed(2)}</TableCell>
+                  <TableCell className="font-semibold text-accent">
+                    ₹{order.amount.toFixed(2)}
+                  </TableCell>
                   <TableCell className="text-sm text-foreground/70">{order.date}</TableCell>
-                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">{order.address}</TableCell>
-                   {/* <TableCell className="text-sm text-foreground/70">{orders.pincode}</TableCell> */}
+                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">
+                    {order.address}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-10 text-foreground/60">
+                <TableCell colSpan={10} className="text-center py-10 text-foreground/60">
                   No orders found
                 </TableCell>
               </TableRow>
