@@ -12,7 +12,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   const handleLogin = () => {
-    if (email && password) {
+    if (email.toLowerCase()!='info@teesforacause.co' && password!='Info@2025$$') {
       sessionStorage.setItem("isAuthenticated", "true")
       router.push("/dashboard")
     }
@@ -65,7 +65,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="text-xs text-center text-foreground/50">Demo: Use any credentials to login</p>
+          {/* <p className="text-xs text-center text-foreground/50">Demo: Use any credentials to login</p> */}
         </div>
       </Card>
     </div>
