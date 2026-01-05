@@ -5,6 +5,7 @@ interface ApiOrder {
   customer_phone: string
   customer_email: string
   shipping_address?: string
+  pincode?: string
   order_id: string
   instamojo_payment_id: string
   payment_status: "Success" | "Failed" | "Pending"

@@ -136,6 +136,7 @@ export function OrdersTable({
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Shipping Address</TableHead>
+              <TableHead>Pincode</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -173,6 +174,9 @@ export function OrdersTable({
                   <TableCell className="text-sm text-foreground/70">{order.date}</TableCell>
                   <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">
                     {order.address}
+                  </TableCell>
+                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">
+                    {order.pincode}
                   </TableCell>
                 </TableRow>
               ))

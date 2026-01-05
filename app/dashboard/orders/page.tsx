@@ -31,6 +31,7 @@ export default function OrdersPage() {
       quantity: order.product?.quantity,
     },
     address: order.shipping_address || "",
+    pincode: order.pincode || "", 
     amount: order.paid_amount,
     date: new Date(order.payment_date || order.created_at).toLocaleDateString("en-IN", {
       year: "numeric",
