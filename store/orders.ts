@@ -27,28 +27,44 @@ interface OrdersStore {
   totalPages: number
   totalItems: number
 
-  fetchOrders: (page?: number, limit?: number, search?: string) => Promise<void>
+  status: "" | "Paid" | "Failed" | "Pending"
+
+  setStatus: (status: "" | "Paid" | "Failed" | "Pending") => void
+  fetchOrders: (
+    page?: number,
+    limit?: number,
+    search?: string,
+    status?: "" | "Paid" | "Failed" | "Pending"
+  ) => Promise<void>
 }
 
-export const useOrdersStore = create<OrdersStore>((set) => ({
+
+export const useOrdersStore = create<OrdersStore>((set, get) => ({
   items: [],
   loading: false,
   error: null,
   totalPages: 0,
   totalItems: 0,
 
-  fetchOrders: async (page = 1, limit = 10, search = "") => {
+  status: "",
+
+  setStatus: (status) => set({ status }),
+
+  fetchOrders: async (page = 1, limit = 10, search = "", status) => {
     set({
       loading: true,
       error: null,
-      items: [] // Clear old data immediately
+      items: [],
     })
 
     try {
+      const currentStatus = status ?? get().status
+
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
-        ...(search && { search })
+        ...(search && { search }),
+        ...(currentStatus && { status: currentStatus }),
       })
 
       const response = await fetch(
@@ -62,7 +78,6 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
 
       const { data, totalPages, totalItems } = await response.json()
 
-      console.log(data, totalPages, totalItems, "ORDER.TS: 65"); 
       set({
         items: data ?? [],
         totalPages: totalPages ?? 0,

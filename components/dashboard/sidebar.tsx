@@ -3,7 +3,12 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
-import { Package, ShoppingCart, FileText, LogOut, PanelRight, Users   } from "lucide-react"
+import {
+  ShoppingCart,
+  Users,
+  LogOut,
+  ChevronLeft,
+} from "lucide-react"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -11,12 +16,8 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true)
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: Package },
     { href: "/dashboard/customers", label: "Customers", icon: Users },
-    { href: "/dashboard/products", label: "Products", icon: Package },
     { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
-    { href: "/dashboard/content", label: "Content", icon: FileText },
-
   ]
 
   const handleLogout = () => {
@@ -26,35 +27,58 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`group ${isOpen ? "w-64" : "w-16"} bg-card border-r border-accent/10 transition-all duration-500 flex flex-col`}
+      className={`h-screen sticky top-0 z-30 flex flex-col bg-card border-r border-accent/10 transition-all duration-300 ease-in-out ${
+        isOpen ? "w-64" : "w-16"
+      }`}
     >
-      <div className="p-4 border-b border-accent/10 flex items-center justify-between">
-        <div className="text-xl font-bold text-accent">TFAC</div>
-        <button
-          className="ml-2 p-1 rounded hover:bg-accent/10 focus:outline-none transition-transform duration-500"
-          onClick={() => setIsOpen((v) => !v)}
-          aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-accent/10">
+        <span
+          className={`text-lg font-bold text-accent transition-opacity duration-300 ${
+            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         >
-          <PanelRight size={22} className={`transition-transform duration-500 ${isOpen ? "rotate-180" : "rotate-0"}`} />
+          TFAC
+        </span>
+
+        <button
+          onClick={() => setIsOpen((v) => !v)}
+          aria-label="Toggle sidebar"
+          className="p-2 rounded-md hover:bg-accent/10 transition"
+        >
+          <ChevronLeft
+            size={20}
+            className={`transition-transform duration-300 ${
+              isOpen ? "rotate-0" : "rotate-180"
+            }`}
+          />
         </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      {/* NAV */}
+      <nav className="flex-1 px-2 py-4 space-y-1">
         {links.map((link) => {
           const Icon = link.icon
           const isActive = pathname === link.href
+
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                isActive ? "bg-accent text-black font-semibold" : "text-foreground/70 hover:bg-accent/10"
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-accent text-black"
+                  : "text-foreground/70 hover:bg-accent/10"
               }`}
             >
-              <Icon size={22} />
+              <Icon size={20} className="shrink-0" />
+
               <span
-                className={`text-sm transition-opacity duration-500 ${isOpen ? "opacity-100 ml-1" : "opacity-0 w-0 ml-0 overflow-hidden"}`}
-                style={{ minWidth: isOpen ? "80px" : 0, display: isOpen ? "inline" : "inline-block" }}
+                className={`whitespace-nowrap transition-all duration-300 ${
+                  isOpen
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 -translate-x-2 pointer-events-none"
+                }`}
               >
                 {link.label}
               </span>
@@ -63,13 +87,22 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-accent/10">
+      {/* FOOTER */}
+      <div className="border-t border-accent/10 p-2">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-foreground/70 hover:bg-red-500/10 hover:text-red-500 transition-colors w-full"
+          className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground/70 hover:bg-red-500/10 hover:text-red-600 transition-colors"
         >
-          <LogOut size={20} />
-          {isOpen && <span className="text-sm">Logout</span>}
+          <LogOut size={18} className="shrink-0" />
+          <span
+            className={`transition-all duration-300 ${
+              isOpen
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 -translate-x-2 pointer-events-none"
+            }`}
+          >
+            Logout
+          </span>
         </button>
       </div>
     </aside>
