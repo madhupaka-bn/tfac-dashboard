@@ -18,6 +18,7 @@ interface Order {
   razorpay_id: string
   status: "Success" | "Failed" | "Pending" | "Paid"
   userName: string
+  instamojo_payment_id: string
   email: string
   phone: string
   product?: {
@@ -26,6 +27,7 @@ interface Order {
     price?: number
     quantity?: number
   }
+  address: String, 
   amount: number
   date: string
 }
@@ -101,6 +103,8 @@ export function OrdersTable({
               <TableHead>Phone</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Shipping Address</TableHead>
+              {/* <TableHead>Pincode</TableHead> */}
             </TableRow>
           </TableHeader>
 
@@ -115,7 +119,7 @@ export function OrdersTable({
               orders.map((order) => (
                 <TableRow key={order.id} className="border-accent/10 hover:bg-card/30">
                   <TableCell className="font-mono text-sm">{order.id}</TableCell>
-                  <TableCell className="font-mono text-sm">{order.razorpay_id}</TableCell>
+                  <TableCell className="font-mono text-sm">{order.instamojo_payment_id}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(order.status)}>
                       {order.status}
@@ -134,6 +138,8 @@ export function OrdersTable({
                   <TableCell>{order.phone}</TableCell>
                   <TableCell className="font-semibold text-accent">₹{order.amount.toFixed(2)}</TableCell>
                   <TableCell className="text-sm text-foreground/70">{order.date}</TableCell>
+                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">{order.address}</TableCell>
+                   {/* <TableCell className="text-sm text-foreground/70">{orders.pincode}</TableCell> */}
                 </TableRow>
               ))
             ) : (

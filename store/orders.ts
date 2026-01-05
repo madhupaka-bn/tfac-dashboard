@@ -6,7 +6,7 @@ interface ApiOrder {
   customer_email: string
   shipping_address?: string
   order_id: string
-  razorpay_payment_id: string
+  instamojo_payment_id: string
   payment_status: "Paid" | "Failed" | "Pending"
   created_at: string
   payment_date: string

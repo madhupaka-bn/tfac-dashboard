@@ -18,7 +18,7 @@ export default function OrdersPage() {
   // Transform API data to OrdersTable format
   const transformedOrders = orders.map(order => ({
     id: order.order_id,
-    razorpay_id: order.razorpay_payment_id,
+    instamojo_payment_id: order.instamojo_payment_id,
     status: order.payment_status,
     userName: order.customer_name,
     email: order.customer_email,
@@ -31,6 +31,7 @@ export default function OrdersPage() {
       quantity: order.product?.quantity
     },
     address: order.shipping_address || "",
+    // pincode: order.pincode || "",
     amount: order.paid_amount,
     date: new Date(order.payment_date || order.created_at).toLocaleDateString(
       "en-IN",
