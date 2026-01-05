@@ -36,6 +36,7 @@ interface Order {
   address: String
   amount: number
   date: string
+  pincode: string 
 }
 
 interface OrdersTableProps {
@@ -150,15 +151,15 @@ export function OrdersTable({
             ) : orders.length > 0 ? (
               orders.map((order) => (
                 <TableRow key={order.id} className="border-accent/10 hover:bg-card/30">
-                  <TableCell className="font-mono text-sm">{order.id}</TableCell>
-                  <TableCell className="font-mono text-sm">{order.instamojo_payment_id}</TableCell>
+                  <TableCell className="font-mono max-w-[200px] break-words whitespace-normal text-sm">{order.id}</TableCell>
+                  <TableCell className="font-mono max-w-[200px] break-words whitespace-normal text-sm">{order.instamojo_payment_id}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(order.status)}>
                       {order.status}
                     </Badge>
                   </TableCell>
                   <TableCell>{order.userName}</TableCell>
-                  <TableCell className="text-foreground/70">{order.email}</TableCell>
+                  <TableCell className="text-foreground/70 max-w-[200px] break-words whitespace-normal">{order.email}</TableCell>
                   <TableCell className="text-foreground/70">
                     {order.product?.name || "N/A"}
                     {order.product?.size && (
@@ -172,7 +173,7 @@ export function OrdersTable({
                     ₹{order.amount.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-sm text-foreground/70">{order.date}</TableCell>
-                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">
+                  <TableCell className="text-sm text-foreground/70 break-words whitespace-normal w-[200px !important]">
                     {order.address}
                   </TableCell>
                   <TableCell className="text-sm text-foreground/70 break-words whitespace-normal max-w-[200px]">

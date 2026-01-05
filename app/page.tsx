@@ -17,7 +17,7 @@ export default function LoginPage() {
      console.log(email,password, email.toLowerCase()==='info@teesforacause.co' && password==='Info@2025$$'); 
     if (email.toLowerCase()==='info@teesforacause.co' && password==='Info@2025$$') {
       sessionStorage.setItem("isAuthenticated", "true")
-      router.push("/dashboard")
+      router.push("/dashboard/orders")
     }
     else {
        console.log("Hello");
