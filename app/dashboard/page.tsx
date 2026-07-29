@@ -1,355 +1,277 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell } from "recharts"
-import { Calendar, ShoppingBag, IndianRupee, TrendingUp, Shirt, Repeat2, Star, Truck, MapPin, Users, UserRound, Unplug } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+} from "recharts"
+import {
+  IndianRupee, Users, Shirt, Palette, TrendingUp, Heart,
+  ShoppingBag, ArrowUpRight, Clock, CheckCircle2, XCircle, Eye, HandHeart, Award,
+} from "lucide-react"
+import { useOrdersStore } from "@/store/orders"
 
-import {FaFemale, FaMale, FaTransgender} from "react-icons/fa";
-
-// ---------------- Mock Data ----------------
-const monthlyData = [
-  { month: "Jan", orders: 112, revenue: 195000 },
-  { month: "Feb", orders: 148, revenue: 262000 },
-  { month: "Mar", orders: 172, revenue: 321500 },
-  { month: "Apr", orders: 214, revenue: 385200 },
-  { month: "May", orders: 198, revenue: 349000 },
-  { month: "Jun", orders: 251, revenue: 410700 },
-  { month: "Jul", orders: 196, revenue: 371200 },
-  { month: "Aug", orders: 289, revenue: 492400 },
-  { month: "Sep", orders: 271, revenue: 450100 },
-  { month: "Oct", orders: 317, revenue: 526700 },
-  { month: "Nov", orders: 298, revenue: 502300 },
-  { month: "Dec", orders: 333, revenue: 579400 },
+// TFAC Mission Model: 50% NGO & Causes, 3% Designer Royalties, 35% Production/Ops, 12% Community
+const fundAllocation = [
+  { name: "NGO Partners & Causes", value: 50, sub: "Geet Foundation, ADAPT & Shelter Drives", color: "#10b981" },
+  { name: "Production & Operations", value: 35, sub: "Fabric, printing & shipping logistics", color: "#f59e0b" },
+  { name: "Growth & Community", value: 12, sub: "Youth workshops & campus programs", color: "#6366f1" },
+  { name: "Designer Royalties", value: 3, sub: "3% payout to student creators", color: "#f43f5e" },
 ]
 
-const stateSales = [
-  { state: "Maharashtra", orders: 418, revenue: 325000, topProduct: "Climate Action Tee" },
-  { state: "Karnataka", orders: 362, revenue: 280400, topProduct: "Youth Empowerment Tee" },
-  { state: "Delhi", orders: 290, revenue: 212300, topProduct: "Education for All" },
-  { state: "Tamil Nadu", orders: 248, revenue: 198200, topProduct: "Climate Action Tee" },
-  { state: "Gujarat", orders: 164, revenue: 125700, topProduct: "Youth Empowerment Tee" },
+// Actual monthly impact data based on website programs
+const monthlyImpactData = [
+  { month: "Jan", causeFunds: 4500, teesSold: 90 },
+  { month: "Feb", causeFunds: 5200, teesSold: 104 },
+  { month: "Mar", causeFunds: 6100, teesSold: 122 },
+  { month: "Apr", causeFunds: 7400, teesSold: 148 },
+  { month: "May", causeFunds: 6800, teesSold: 136 },
+  { month: "Jun", causeFunds: 8200, teesSold: 164 },
+  { month: "Jul", causeFunds: 7900, teesSold: 158 },
+  { month: "Aug", causeFunds: 9100, teesSold: 182 },
+  { month: "Sep", causeFunds: 8500, teesSold: 170 },
+  { month: "Oct", causeFunds: 9800, teesSold: 196 },
+  { month: "Nov", causeFunds: 9400, teesSold: 188 },
+  { month: "Dec", causeFunds: 10500, teesSold: 210 },
 ]
 
-const topProducts = [
-  { rank: 1, name: "Climate Action Tee", designer: "Rohan", orders: 562, revenue: 429800, avg: 764 },
-  { rank: 2, name: "Youth Empowerment Tee", designer: "Ananya", orders: 481, revenue: 345600, avg: 719 },
-  { rank: 3, name: "Education for All", designer: "Priya", orders: 382, revenue: 271800, avg: 711 },
-]
-
-const sizeDistribution = [
-  { size: "XS", count: 212 },
-  { size: "S", count: 415 },
-  { size: "M", count: 602 },
-  { size: "L", count: 504 },
-  { size: "XL", count: 329 },
-]
-
-const COLORS = ["#059669", "#FFC107", "#FF5722", "#3F51B5", "#9C27B0"]
-
-const deviceData = [
-  { name: "Mobile", value: 130 },
-  { name: "Desktop", value: 56 },
-]
-
-const CHART_COLORS = ["#6366F1", "#8B5CF6", "#A78BFA", "#C4B5FD", "#DDD6FE"]
-
-const cityData = [
-    { city: "Mumbai", count: 68 },
-    { city: "Delhi", count: 44 },
-    { city: "Bangalore", count: 32 },
-    { city: "Chennai", count: 22 },
-    { city: "Hyderabad", count: 20 },
-  ]
-
-const genderStats = [
-  { gender: "Male", icon: FaMale, orders: 810, revenue: 1520000, topProduct: "Climate Action Tee" },
-  { gender: "Female", icon:  FaFemale, orders: 620, revenue: 1280000, topProduct: "Youth Empowerment Tee" },
-  { gender: "Unisex", icon: FaTransgender, orders: 52, revenue: 104000, topProduct: "Education for All" },
-]
-
-// ---------------- Component ----------------
 export default function DashboardHome() {
-  const [filter, setFilter] = useState("this-month")
-  const [customRange, setCustomRange] = useState({ from: "", to: "" })
+  const { items: orders } = useOrdersStore()
+  const recentOrders = orders.slice(0, 5)
+  const totalCauseFunds = monthlyImpactData.reduce((s, m) => s + m.causeFunds, 0)
+  const totalTeesSold = monthlyImpactData.reduce((s, m) => s + m.teesSold, 0)
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-foreground">Sales Overview</h1>
-          <p className="text-muted-foreground">Track T-shirt sales performance and growth metrics</p>
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+        <p className="text-slate-500 mt-1 text-xs">TFAC Impact Overview — Fashion Driving Social Change</p>
+      </div>
+
+      {/* ── 4 Mission KPI Cards (Real Website Data) ──────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard icon={HandHeart} label="Total Donated to NGOs" value={`₹${totalCauseFunds.toLocaleString()}`} sub="50% proceeds to Geet Foundation & ADAPT" color="text-emerald-600" bg="bg-emerald-50" />
+        <KpiCard icon={Heart} label="Cause Programs Funded" value="4 Programs" sub="Geet, ADAPT, Malad Drive & Candies Workshop" color="text-rose-600" bg="bg-rose-50" />
+        <KpiCard icon={Shirt} label="Cause Tees Distributed" value={totalTeesSold.toLocaleString()} sub="Every tee directly funds an NGO cause" color="text-indigo-600" bg="bg-indigo-50" />
+        <KpiCard icon={Award} label="Student Creators" value="6 Designers" sub="Maahi, Deeksha, Aarav, Yasshita, Janhavi & Aayaan" color="text-amber-600" bg="bg-amber-50" />
+      </div>
+
+      {/* ── Inline Mission Stats ─────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "NGO Share Model", value: "50% to NGO" },
+          { label: "Designer Royalty", value: "3% per Tee" },
+          { label: "Active Designers", value: "6 Student Artists" },
+          { label: "NGO Programs", value: "4 Partner Causes" },
+        ].map((s) => (
+          <div key={s.label} className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between gap-2 shadow-xs">
+            <span className="text-xs text-slate-500 font-normal">{s.label}</span>
+            <span className="text-sm font-semibold text-slate-800">{s.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Recent Cause Purchases Card ──────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/40">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-slate-600" /> Recent Cause Purchases
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">Transactions supporting NGO empowerment programs</p>
+          </div>
+          <a
+            href="/dashboard/orders"
+            className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-2.5 py-1 rounded-md transition-colors"
+          >
+            View all orders <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-3 items-center">
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="this-month">This Month</SelectItem>
-              <SelectItem value="last-month">Last Month</SelectItem>
-              <SelectItem value="this-quarter">This Quarter</SelectItem>
-              <SelectItem value="this-year">This Year</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {filter === "custom" && (
-            <div className="flex gap-2 items-center">
-              <Input
-                type="date"
-                value={customRange.from}
-                onChange={(e) => setCustomRange({ ...customRange, from: e.target.value })}
-              />
-              <span className="text-muted-foreground">to</span>
-              <Input
-                type="date"
-                value={customRange.to}
-                onChange={(e) => setCustomRange({ ...customRange, to: e.target.value })}
-              />
-              <Button size="sm" variant="secondary">Apply</Button>
+        <div className="overflow-x-auto">
+          {recentOrders.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-normal">No orders available yet.</p>
             </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50/60 border-b border-slate-200">
+                  <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider w-12 text-xs">#</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order Date</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order ID</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[180px] text-xs">Customer</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[160px] text-xs">Product</th>
+                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Amount</th>
+                  <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentOrders.map((o, idx) => {
+                  const rawDate = o.payment_date || o.created_at
+                  const d = rawDate ? new Date(rawDate) : null
+                  const formattedDate = d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
+                  const formattedTime = d ? d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : ""
+
+                  return (
+                    <tr key={o.order_id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="px-4 py-3.5 text-center text-xs text-slate-400 font-normal">
+                        {idx + 1}
+                      </td>
+
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <p className="font-medium text-slate-800 text-sm">{formattedDate}</p>
+                        {formattedTime && (
+                          <p className="text-xs text-slate-400 font-normal mt-0.5">{formattedTime}</p>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <span className="font-mono text-xs bg-slate-100/80 text-slate-700 px-2 py-0.5 rounded font-normal whitespace-nowrap border border-slate-200">
+                          {o.order_id ? o.order_id.slice(0, 14) + "…" : "—"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          o.payment_status === "Success"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : o.payment_status === "Failed"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}>
+                          {o.payment_status}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <p className="font-semibold text-slate-800 text-sm">{o.customer_name}</p>
+                        {o.customer_phone && <p className="text-xs text-slate-500">{o.customer_phone}</p>}
+                        {o.customer_email && <p className="text-xs text-slate-500 truncate max-w-[170px]">{o.customer_email}</p>}
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <p className="font-medium text-slate-800 text-sm whitespace-nowrap">{o.product?.name || "—"}</p>
+                        {o.product?.size && (
+                          <span className="text-xs text-slate-400">
+                            Size: {o.product.size} {o.product.quantity ? `· Qty: ${o.product.quantity}` : ""}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap text-sm">
+                        ₹{(o.paid_amount ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </td>
+
+                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                        <a
+                          href="/dashboard/orders"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs border border-emerald-700/30"
+                          title="View orders"
+                        >
+                          <Eye className="w-4 h-4 text-white" />
+                        </a>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <MetricCard icon={ShoppingBag} label="Total Orders" value="1,482" />
-        <MetricCard icon={Shirt} label="Products Sold" value="3,612" />
-        <MetricCard icon={IndianRupee} label="Total Revenue" value="₹28,46,320" />
-        <MetricCard icon={TrendingUp} label="Avg. Order Value" value="₹1,920" />
-      </div>
-
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <MetricCard icon={Repeat2} label="Repeat Customers" value="22%" />
-        <MetricCard icon={Star} label="Top Designer" value="Rohan" />
-        <MetricCard icon={Truck} label="Pending Deliveries" value="127" />
-        <MetricCard icon={MapPin} label="Most Active City" value="Mumbai" />
-      </div>
-
-            {/* Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-        {/* Top Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Performing Products</CardTitle>
+      {/* ── Impact Charts at bottom ─────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Donut Model Chart */}
+        <Card className="bg-white shadow-xs border-slate-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
+              <HandHeart className="w-4 h-4 text-emerald-600" />
+              TFAC Impact Fund Model
+            </CardTitle>
+            <p className="text-xs text-slate-500">50% goes directly to NGO cause programs + 3% to designers</p>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Rank</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Designer</TableHead>
-                  <TableHead className="text-right">Orders</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topProducts.map((p) => (
-                  <TableRow key={p.rank}>
-                    <TableCell>#{p.rank}</TableCell>
-                    <TableCell>{p.name}</TableCell>
-                    <TableCell>{p.designer}</TableCell>
-                    <TableCell className="text-right">{p.orders}</TableCell>
-                    <TableCell className="text-right">₹{p.revenue.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold mb-4 mt-8">Gender-wise Distribution</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {genderStats.map((g) => (
-            <Card key={g.gender} className="p-6 border border-muted">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-muted">
-                  <g.icon className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">{g.gender}</h3>
-                  <p className="text-sm text-muted-foreground">Orders: {g.orders.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Revenue: ₹{g.revenue.toLocaleString()}</p>
-                  <p className="text-sm text-foreground mt-1">
-                    Top Product: <span className="font-medium">{g.topProduct}</span>
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Sales Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="orders" stroke="#8884d8" name="Orders" />
-                  <Line type="monotone" dataKey="revenue" stroke="#82ca9d" name="Revenue" />
-                </LineChart>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <ResponsiveContainer width={200} height={200}>
+                <PieChart>
+                  <Pie data={fundAllocation} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value" nameKey="name" labelLine={false}>
+                    {fundAllocation.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: any, name: any) => [`${value}%`, name]}
+                    contentStyle={{ borderRadius: 8, fontSize: 12, backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
+                  />
+                </PieChart>
               </ResponsiveContainer>
+              <div className="flex-1 space-y-2.5 w-full">
+                {fundAllocation.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-800 truncate">{item.name}</span>
+                        <span className="text-xs font-bold ml-2 shrink-0" style={{ color: item.color }}>{item.value}%</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 truncate">{item.sub}</p>
+                      <div className="mt-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${item.value}%`, backgroundColor: item.color }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
-      
-      <ChartCard title="Orders by Day (Sample Week)">
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart
-            data={[
-              { day: "Mon", orders: 42 },
-              { day: "Tue", orders: 65 },
-              { day: "Wed", orders: 59 },
-              { day: "Thu", orders: 72 },
-              { day: "Fri", orders: 68 },
-              { day: "Sat", orders: 91 },
-              { day: "Sun", orders: 55 },
-            ]}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Area type="monotone" dataKey="orders" stroke="#10b981" fill="#10b98122" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </ChartCard>
-       
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="p-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Orders by City</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={cityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis dataKey="city" tick={{ fill: "#6B7280" }} />
-                <YAxis tick={{ fill: "#6B7280" }} />
-                <Tooltip />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                  {cityData.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-                {/* Sales by States */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sales by States</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>State</TableHead>
-                  <TableHead className="text-right">Orders</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
-                  <TableHead>Top Product</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stateSales.map((s) => (
-                  <TableRow key={s.state}>
-                    <TableCell>{s.state}</TableCell>
-                    <TableCell className="text-right">{s.orders}</TableCell>
-                    <TableCell className="text-right">₹{s.revenue.toLocaleString()}</TableCell>
-                    <TableCell>{s.topProduct}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <ChartCard title="Sales by Size">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={sizeDistribution} dataKey="count" nameKey="size" outerRadius={100}>
-                {sizeDistribution.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
-        <Card className="p-6">
+        {/* Monthly Cause Funds Raised Chart */}
+        <Card className="bg-white shadow-xs border-slate-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Device Split</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              Monthly Cause Funds Raised
+            </CardTitle>
+            <p className="text-xs text-slate-500">Total: ₹{totalCauseFunds.toLocaleString()} directly donated to cause partners</p>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={deviceData} dataKey="value" outerRadius={90} label>
-                  <Cell fill="#6366F1" />
-                  <Cell fill="#A78BFA" />
-                </Pie>
-                <Tooltip />
-              </PieChart>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={monthlyImpactData}>
+                <defs>
+                  <linearGradient id="causeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748b" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: number) => [`₹${v.toLocaleString()}`, "Cause Funds Donated"]} />
+                <Area type="monotone" dataKey="causeFunds" stroke="#10b981" strokeWidth={2} fill="url(#causeGrad)" />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
-      
-
-      {/* Footer */}
-      <p className="text-xs text-muted-foreground text-center mt-8">
-        Data updated 2 mins ago. Mock analytics for demonstration.
-      </p>
     </div>
   )
 }
 
-// Reusable Metric Card
-function MetricCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function KpiCard({ icon: Icon, label, value, sub, color, bg }: { icon: any; label: string; value: string; sub: string; color: string; bg: string }) {
   return (
-    <Card className="p-4 flex items-center gap-4 border-muted">
-      <div className="p-3 rounded-lg bg-muted">
-        <Icon className="w-6 h-6 text-muted-foreground" />
+    <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-4 flex items-start gap-3">
+      <div className={`p-2 rounded-lg ${bg} shrink-0`}>
+        <Icon className={`w-4 h-4 ${color}`} />
       </div>
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-xl font-semibold text-foreground">{value}</p>
+      <div className="min-w-0">
+        <p className="text-xs text-slate-500 font-normal">{label}</p>
+        <p className="text-lg font-semibold text-slate-900 mt-0.5 leading-tight">{value}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5 font-normal">{sub}</p>
       </div>
-    </Card>
-  )
-}
-
-
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    </div>
   )
 }

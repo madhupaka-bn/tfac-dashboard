@@ -16,35 +16,53 @@ export default function OrdersPage() {
   }, [page, search, status, fetchOrders])
 
   // Transform API data to OrdersTable format
-  const transformedOrders = orders.map((order) => ({
-    id: order.order_id,
-    instamojo_payment_id: order.instamojo_payment_id,
-    status: order.payment_status,
-    userName: order.customer_name,
-    email: order.customer_email,
-    phone: order.customer_phone,
-    product_id: order.product?.id || 0,
-    product: {
-      name: order.product?.name || "N/A",
-      size: order.product?.size,
-      price: order.product?.price,
-      quantity: order.product?.quantity,
-    },
-    address: order.shipping_address || "",
-    pincode: order.pincode || "", 
-    amount: order.paid_amount,
-    date: new Date(order.payment_date || order.created_at).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }),
-  }))
+  const transformedOrders = orders.map((order) => {
+    const rawDate = order.payment_date || order.created_at
+    const d = rawDate ? new Date(rawDate) : null
+    
+    const formattedDate = d
+      ? d.toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—"
+
+    const formattedTime = d
+      ? d.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : ""
+
+    return {
+      id: order.order_id,
+      instamojo_payment_id: order.instamojo_payment_id,
+      status: order.payment_status,
+      userName: order.customer_name,
+      email: order.customer_email,
+      phone: order.customer_phone,
+      product_id: order.product?.id || 0,
+      product: {
+        name: order.product?.name || "N/A",
+        size: order.product?.size,
+        price: order.product?.price,
+        quantity: order.product?.quantity,
+      },
+      address: order.shipping_address || "",
+      pincode: order.pincode || "",
+      amount: order.paid_amount,
+      date: formattedDate,
+      time: formattedTime,
+    }
+  })
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Orders</h1>
-        <p className="text-foreground/60">View and manage all orders</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Orders</h1>
+        <p className="text-xs text-slate-500 mt-1">View and manage all customer orders</p>
       </div>
 
       <OrdersTable

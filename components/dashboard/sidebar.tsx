@@ -4,8 +4,12 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import {
+  LayoutDashboard,
   ShoppingCart,
   Users,
+  Shirt,
+  HeartHandshake,
+  Palette,
   LogOut,
   ChevronLeft,
 } from "lucide-react"
@@ -16,8 +20,12 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true)
 
   const links = [
-    { href: "/dashboard/customers", label: "Customers", icon: Users },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
+    { href: "/dashboard/customers", label: "Customers", icon: Users },
+    { href: "/dashboard/products", label: "Products", icon: Shirt },
+    { href: "/dashboard/ngo", label: "NGO & Donations", icon: HeartHandshake },
+    { href: "/dashboard/designers", label: "Designers", icon: Palette },
   ]
 
   const handleLogout = () => {
@@ -27,7 +35,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`h-screen sticky top-0 z-30 flex flex-col bg-card border-r border-accent/10 transition-all duration-300 ease-in-out ${
+      className={`h-screen sticky top-0 z-30 flex flex-col bg-white border-r border-border shadow-sm transition-all duration-300 ease-in-out ${
         isOpen ? "w-64" : "w-16"
       }`}
     >
@@ -56,10 +64,12 @@ export function Sidebar() {
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 px-2 py-4 space-y-1">
+      <nav className="flex-1 px-2 py-4 space-y-1 overflow-hidden">
         {links.map((link) => {
           const Icon = link.icon
-          const isActive = pathname === link.href
+          const isActive = link.exact
+            ? pathname === link.href
+            : pathname.startsWith(link.href)
 
           return (
             <Link
@@ -67,8 +77,8 @@ export function Sidebar() {
               href={link.href}
               className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-accent text-black"
-                  : "text-foreground/70 hover:bg-accent/10"
+                  ? "bg-accent text-white"
+                  : "text-foreground/70 hover:bg-accent/10 hover:text-foreground"
               }`}
             >
               <Icon size={20} className="shrink-0" />
