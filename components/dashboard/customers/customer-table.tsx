@@ -7,8 +7,15 @@ import { debounce } from "@/app/constUtil"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Search, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Users, ShoppingBag, MapPin,
+  ChevronsLeft, ChevronsRight, Users, ShoppingBag, MapPin, Eye, Phone, Mail, User
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 interface Customer {
   id: string
@@ -40,6 +47,7 @@ export function CustomersTable({
   onPageChange,
 }: CustomersTableProps) {
   const [localSearch, setLocalSearch] = useState(search)
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
@@ -79,7 +87,7 @@ export function CustomersTable({
             setLocalSearch(e.target.value)
             debouncedSearch(e.target.value)
           }}
-          className="pl-9 bg-white border-slate-200 text-sm shadow-xs focus-visible:ring-1"
+          className="pl-9 bg-white border-slate-200 text-sm shadow-xs focus-visible:ring-1 text-slate-900 placeholder:text-slate-400"
         />
       </div>
 
@@ -89,13 +97,12 @@ export function CustomersTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50/60 border-b border-slate-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Customer ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[150px]">Customer Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[180px]">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[220px]">Shipping Address</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Pincode</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Orders</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Customer ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider min-w-[180px]">Customer Name</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider min-w-[200px]">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Total Orders</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -106,14 +113,13 @@ export function CustomersTable({
                     <td className="px-4 py-4"><Skeleton className="h-4 w-28" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-32" /></td>
-                    <td className="px-4 py-4"><Skeleton className="h-4 w-44" /></td>
-                    <td className="px-4 py-4"><Skeleton className="h-4 w-14" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                    <td className="px-4 py-4 text-center"><Skeleton className="h-8 w-8 rounded-md mx-auto" /></td>
                   </tr>
                 ))
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
+                  <td colSpan={6} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-400">
                       <Users className="w-10 h-10 opacity-40" />
                       <p className="text-sm font-normal">No customers found</p>
@@ -125,42 +131,30 @@ export function CustomersTable({
                   <tr key={index} className="hover:bg-slate-50/60 transition-colors">
                     {/* ID */}
                     <td className="px-4 py-3.5">
-                      <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-normal">
+                      <span className="font-mono text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-semibold">
                         #{customer?.id?.toString()}
                       </span>
                     </td>
 
-                    {/* Name */}
-                    <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap text-sm">
-                      {customer?.name}
+                    {/* Name (Clickable) */}
+                    <td className="px-4 py-3.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="font-bold text-slate-900 hover:text-emerald-600 text-sm transition-colors text-left cursor-pointer"
+                      >
+                        {customer?.name}
+                      </button>
                     </td>
 
-                    {/* Phone */}
-                    <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap text-xs">
-                      {customer?.phone}
+                    {/* Phone - High Contrast Dark Text */}
+                    <td className="px-4 py-3.5 text-slate-800 font-medium whitespace-nowrap text-xs">
+                      {customer?.phone || "—"}
                     </td>
 
-                    {/* Email */}
-                    <td className="px-4 py-3.5 text-slate-600 max-w-[200px] truncate text-xs">
-                      {customer?.email}
-                    </td>
-
-                    {/* Address */}
-                    <td className="px-4 py-3.5 text-slate-600 max-w-[240px]">
-                      <p className="line-clamp-2 text-xs leading-relaxed font-normal">
-                        {customer?.address?.toString() || "—"}
-                      </p>
-                    </td>
-
-                    {/* Pincode */}
-                    <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap text-xs font-mono">
-                      {customer?.pincode ? (
-                        <span className="inline-flex items-center gap-1 text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 text-xs">
-                          <MapPin className="w-3 h-3 text-slate-400" /> {customer.pincode}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
+                    {/* Email - High Contrast Dark Text */}
+                    <td className="px-4 py-3.5 text-slate-800 font-medium max-w-[200px] truncate text-xs">
+                      {customer?.email || "—"}
                     </td>
 
                     {/* Total Orders Badge */}
@@ -169,6 +163,19 @@ export function CustomersTable({
                         <ShoppingBag className="w-3.5 h-3.5 text-slate-500" />
                         {customer?.total_orders ?? 0} {customer?.total_orders === 1 ? "Order" : "Orders"}
                       </span>
+                    </td>
+
+                    {/* Action Button */}
+                    <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="w-8 h-8 p-0 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs border border-emerald-700/30 cursor-pointer"
+                        title="View customer details"
+                      >
+                        <Eye className="w-4 h-4 text-white" />
+                      </Button>
                     </td>
                   </tr>
                 ))
@@ -258,6 +265,62 @@ export function CustomersTable({
           </div>
         </div>
       )}
+
+      {/* ── Customer Detail Modal ───────────────────────────── */}
+      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
+        <DialogContent className="sm:max-w-md w-full bg-white border border-slate-200 p-6 rounded-2xl shadow-xl">
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <DialogHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
+                <div>
+                  <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <User className="w-4 h-4 text-emerald-600" /> Customer Profile
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                    Customer ID: <span className="font-mono text-slate-800 font-bold">#{selectedCustomer.id}</span>
+                  </DialogDescription>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <ShoppingBag className="w-3.5 h-3.5" /> {selectedCustomer.total_orders} Orders
+                </span>
+              </DialogHeader>
+
+              {/* Personal Details */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Full Name</p>
+                  <p className="font-extrabold text-slate-900 text-sm">{selectedCustomer.name}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Phone Number</p>
+                  <p className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                    <Phone className="w-3.5 h-3.5 text-slate-500" /> {selectedCustomer.phone || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Email Address</p>
+                  <p className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                    <Mail className="w-3.5 h-3.5 text-slate-500" /> {selectedCustomer.email || "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-500" /> Shipping Address
+                </p>
+                <div className="bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 space-y-1">
+                  <p className="leading-relaxed font-semibold">{selectedCustomer.address || "No saved address"}</p>
+                  {selectedCustomer.pincode && (
+                    <p className="font-bold text-slate-900">Pincode: {selectedCustomer.pincode}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

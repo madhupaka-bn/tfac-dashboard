@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,11 +13,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const router = useRouter()
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("isAuthenticated") === "true") {
+      router.push("/dashboard")
+    }
+  }, [router])
+
   const handleLogin = () => {
      console.log(email,password, email.toLowerCase()==='info@teesforacause.co' && password==='Info@2025$$'); 
     if (email.toLowerCase()==='info@teesforacause.co' && password==='Info@2025$$') {
       sessionStorage.setItem("isAuthenticated", "true")
-      router.push("/dashboard/orders")
+      router.push("/dashboard")
     }
     else {
        console.log("Hello");

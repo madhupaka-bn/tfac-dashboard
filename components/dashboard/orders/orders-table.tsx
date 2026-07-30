@@ -240,15 +240,25 @@ export function OrdersTable({
 
                       {/* Product */}
                       <td className="px-4 py-3.5">
-                        <p className="font-medium text-slate-800 text-sm whitespace-nowrap">
-                          {order.product?.name || "—"}
-                        </p>
-                        {order.product?.size && (
-                          <span className="text-xs text-slate-400">
-                            Size: {order.product.size}
-                            {order.product.quantity ? ` · Qty: ${order.product.quantity}` : ""}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={(order.product as any)?.image || "/assets/shop-musical-trance-front.jpg"}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                            }}
+                          />
+                          <div>
+                            <p className="font-semibold text-slate-800 text-xs line-clamp-1">
+                              {order.product?.name || "Stay in the Musical Trance"}
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              Size: <span className="font-semibold text-slate-700">{order.product?.size || "M"}</span>
+                              {" · "}Qty: <span className="font-semibold text-slate-700">{order.product?.quantity || 1}</span>
+                            </p>
+                          </div>
+                        </div>
                       </td>
 
                       {/* Amount */}
@@ -411,20 +421,28 @@ export function OrdersTable({
 
               {/* Product Info */}
               <div className="space-y-1.5">
-                <p className="text-xs font-medium uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Shirt className="w-3.5 h-3.5 text-slate-400" /> Purchased Items
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Shirt className="w-3.5 h-3.5 text-slate-400" /> Purchased Item
                 </p>
-                <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-semibold text-slate-900 text-xs">{selectedOrder.product?.name || "Product"}</p>
-                    <p className="text-slate-500 mt-0.5">
-                      Size: <span className="font-medium text-slate-700">{selectedOrder.product?.size || "M"}</span>
-                      {" · "}Quantity: <span className="font-medium text-slate-700">{selectedOrder.product?.quantity || 1}</span>
+                <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 text-xs">
+                  <img
+                    src={(selectedOrder.product as any)?.image || "/assets/shop-musical-trance-front.jpg"}
+                    alt=""
+                    className="w-14 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 text-xs truncate">{selectedOrder.product?.name || "Stay in the Musical Trance"}</p>
+                    <p className="text-slate-600 mt-0.5 font-medium">
+                      Size: <span className="font-bold text-slate-800">{selectedOrder.product?.size || "M"}</span>
+                      {" · "}Quantity: <span className="font-bold text-slate-800">{selectedOrder.product?.quantity || 1}</span>
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[11px] text-slate-400">Total Paid</p>
-                    <p className="text-sm font-bold text-slate-900">
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] font-medium text-slate-400 uppercase">Total Paid</p>
+                    <p className="text-base font-extrabold text-slate-900">
                       ₹{selectedOrder.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
