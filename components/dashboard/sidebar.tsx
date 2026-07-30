@@ -40,19 +40,18 @@ export function Sidebar() {
       }`}
     >
       {/* HEADER */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-accent/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <span
-          className={`text-lg font-bold text-accent transition-opacity duration-300 ${
+          className={`text-lg font-extrabold text-emerald-600 transition-opacity duration-300 ${
             isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           TFAC
         </span>
-
         <button
           onClick={() => setIsOpen((v) => !v)}
           aria-label="Toggle sidebar"
-          className="p-2 rounded-md hover:bg-accent/10 transition"
+          className="p-2 rounded-md hover:bg-slate-100 transition cursor-pointer text-slate-500"
         >
           <ChevronLeft
             size={20}
@@ -75,10 +74,10 @@ export function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-accent text-white"
-                  : "text-foreground/70 hover:bg-accent/10 hover:text-foreground"
+                  ? "bg-emerald-600 text-white font-semibold shadow-xs"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               <Icon size={20} className="shrink-0" />

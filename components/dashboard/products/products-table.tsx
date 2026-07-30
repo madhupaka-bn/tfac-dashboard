@@ -4,7 +4,8 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Edit2, Trash2, Search, Shirt, ExternalLink } from "lucide-react"
+import { Edit2, Trash2, Search, Shirt, ExternalLink, AlertTriangle } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 interface Product {
   id: number
@@ -15,6 +16,7 @@ interface Product {
   discount: number
   final_price: number
   sizes: string[]
+  sizeStock?: Record<string, number>
   image: string
   productUrl?: string
   description: string
@@ -30,6 +32,7 @@ interface ProductsTableProps {
 export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const itemsPerPage = 12
 
   const filtered = products.filter(
@@ -49,82 +52,63 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
         <Input
           placeholder="Search by name or designer…"
           value={searchTerm}
-          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
-          className="pl-9 bg-white border-border shadow-xs focus-visible:ring-1"
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+            setCurrentPage(1)
+          }}
+          className="pl-9 bg-card border-border/80 text-foreground placeholder:text-muted-foreground shadow-2xs h-9 text-xs"
         />
       </div>
 
       {/* Product Cards Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3 shadow-xs">
-              <Skeleton className="w-full aspect-4/3 rounded-lg" />
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-full" />
-              <div className="pt-2 border-t border-slate-100 flex justify-between">
-                <Skeleton className="h-6 w-16" />
-                <Skeleton className="h-8 w-20 rounded-md" />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-xl" />
           ))}
         </div>
       ) : paginated.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-border shadow-xs text-muted-foreground">
-          <Shirt className="w-10 h-10 mx-auto mb-2 opacity-30" />
-          <p className="text-sm font-medium">No products found</p>
+        <div className="text-center py-12 border border-dashed border-border rounded-xl bg-card">
+          <Shirt className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+          <p className="text-sm font-semibold text-foreground">No products found</p>
+          <p className="text-xs text-muted-foreground mt-1">Try searching for something else</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {paginated.map((product) => {
-            const liveLink = product.productUrl || `https://teesforacause.co/product/${product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+            const hasDiscount = product.discount > 0
+
             return (
               <div
                 key={product.id}
-                className="bg-white rounded-xl border border-border/80 shadow-xs overflow-hidden flex flex-col group hover:shadow-md hover:border-border transition-all duration-200"
+                className="group relative bg-card border border-border/80 rounded-xl overflow-hidden shadow-2xs hover:shadow-md hover:border-emerald-500/40 transition-all duration-300 flex flex-col justify-between"
               >
-                {/* Product Header / Image thumbnail area */}
-                <div className="relative aspect-4/3 overflow-hidden bg-slate-100 flex items-center justify-center">
+                {/* Cover Image Container */}
+                <div className="relative aspect-square overflow-hidden bg-slate-100">
                   <img
-                    src={product.image}
+                    src={product.image || "/placeholder.svg"}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).onerror = null;
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 -z-1 flex flex-col items-center justify-center text-slate-400 bg-slate-100">
-                    <Shirt className="w-8 h-8 opacity-40 mb-1" />
-                    <span className="text-[11px] font-medium">{product.name}</span>
+
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                    {hasDiscount && (
+                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded bg-emerald-600 text-white shadow-xs">
+                        {product.discount}% OFF
+                      </span>
+                    )}
                   </div>
-
-                  <a
-                    href={liveLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-2.5 left-2.5 bg-black/70 hover:bg-black text-white text-[11px] font-semibold px-2 py-1 rounded-md backdrop-blur-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="View on live website"
-                  >
-                    <ExternalLink className="w-3 h-3" /> Live Page
-                  </a>
-
-                  {product.discount > 0 && (
-                    <span className="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                      {product.discount}% OFF
-                    </span>
-                  )}
                 </div>
 
-                {/* Product Details */}
-                <div className="p-4 flex flex-col gap-3 flex-1 justify-between">
+                {/* Content */}
+                <div className="p-3 space-y-2.5 flex-1 flex flex-col justify-between">
                   <div className="space-y-1">
                     <a
-                      href={liveLink}
+                      href={product.productUrl || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-foreground text-base leading-snug line-clamp-1 hover:text-accent flex items-center justify-between gap-1 group/link"
+                      className="font-bold text-sm text-foreground hover:text-emerald-600 transition-colors line-clamp-1 flex items-center justify-between group/link"
                     >
                       <span>{product.name}</span>
                       <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 text-muted-foreground shrink-0 transition-opacity" />
@@ -134,14 +118,22 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                     </p>
                   </div>
 
-                  {/* Available Sizes */}
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <span className="text-[11px] text-muted-foreground mr-1">Sizes:</span>
-                    {product.sizes.map((s) => (
-                      <span key={s} className="px-1.5 py-0.5 text-[11px] rounded bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
-                        {s}
+                  {/* Available Sizes / Sold Out Tag */}
+                  <div className="flex items-center gap-1 flex-wrap min-h-[24px]">
+                    {product.sizes && product.sizes.length > 0 ? (
+                      <>
+                        <span className="text-[11px] text-muted-foreground mr-1">Sizes:</span>
+                        {product.sizes.map((s) => (
+                          <span key={s} className="px-1.5 py-0.5 text-[11px] rounded bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
+                            {s}
+                          </span>
+                        ))}
+                      </>
+                    ) : (
+                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded bg-rose-50 text-rose-600 border border-rose-200 uppercase tracking-wider">
+                        Sold Out
                       </span>
-                    ))}
+                    )}
                   </div>
 
                   {/* Price & Actions */}
@@ -165,7 +157,7 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onDelete(product.id)}
+                        onClick={() => setProductToDelete(product)}
                         className="h-8 px-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-200"
                       >
                         <Trash2 size={13} className="mr-1" /> Delete
@@ -195,6 +187,50 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {productToDelete && (
+        <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+          <DialogContent className="max-w-md bg-white border border-slate-200 p-6 rounded-lg shadow-2xl text-slate-900">
+            <DialogHeader className="pb-2 border-b border-slate-100">
+              <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                Confirm Product Deletion
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-3 space-y-2">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Are you sure you want to delete <span className="font-bold text-slate-900">"{productToDelete.name}"</span>?
+              </p>
+              <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 p-3 rounded-md">
+                This action cannot be undone and will permanently remove this product from your catalog store.
+              </p>
+            </div>
+
+            <DialogFooter className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setProductToDelete(null)}
+                className="bg-white border-slate-200 text-slate-700 font-semibold text-xs h-8"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  onDelete(productToDelete.id)
+                  setProductToDelete(null)
+                }}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-8 shadow-xs px-4"
+              >
+                Delete Product
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   )

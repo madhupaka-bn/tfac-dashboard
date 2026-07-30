@@ -13,9 +13,7 @@ export default function ProductsPage() {
   const { items: products, loading, deleteProduct } = useProductsStore()
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      deleteProduct(id)
-    }
+    deleteProduct(id)
   }
 
   const handleEdit = (product: any) => {
