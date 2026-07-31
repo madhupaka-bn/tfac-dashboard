@@ -217,15 +217,15 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white border border-slate-200 p-6 rounded-lg shadow-2xl text-slate-900">
-        <DialogHeader className="pb-3 border-b border-slate-100">
-          <DialogTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
-            <Shirt className="w-5 h-5 text-emerald-600" />
+      <DialogContent className="sm:max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white border border-slate-200 p-4 sm:p-5 rounded-xl shadow-2xl text-slate-900">
+        <DialogHeader className="pb-2.5 pt-0 border-b border-slate-100 space-y-0">
+          <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <Shirt className="w-4 h-4 text-emerald-600" />
             {product ? "Edit Product Details" : "Add New Product"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-3 pt-3">
           {/* Top Form Row: Name (3cols) | Designer (2cols) | Price (1col) | Discount (1col) */}
           <div className="grid grid-cols-1 sm:grid-cols-7 gap-3">
             {/* Product Name (Wider: 3 cols) */}
