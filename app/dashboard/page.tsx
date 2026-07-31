@@ -63,27 +63,40 @@ export default function DashboardHome() {
         <p className="text-slate-500 mt-1 text-xs">TFAC Impact Overview — Fashion Driving Social Change</p>
       </div>
 
-      {/* ── 4 Mission KPI Cards (Real Website Data) ──────────────── */}
+      {/* ── 4 Primary Impact KPI Cards ──────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={HandHeart} label="Total Donated to NGOs" value={`₹${totalCauseFunds.toLocaleString()}`} color="text-emerald-600" bg="bg-emerald-50" />
-        <KpiCard icon={Heart} label="Cause Programs Funded" value="4 Programs" color="text-rose-600" bg="bg-rose-50" />
-        <KpiCard icon={Shirt} label="Cause Tees Distributed" value={totalTeesSold.toLocaleString()} color="text-indigo-600" bg="bg-indigo-50" />
-        <KpiCard icon={Award} label="Student Creators" value="6 Designers" color="text-amber-600" bg="bg-amber-50" />
-      </div>
-
-      {/* ── Inline Mission Stats ─────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "NGO Share Model", value: "50% to NGO" },
-          { label: "Designer Royalty", value: "3% per Tee" },
-          { label: "Active Designers", value: "6 Student Artists" },
-          { label: "NGO Programs", value: "4 Partner Causes" },
-        ].map((s) => (
-          <div key={s.label} className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between gap-2 shadow-xs">
-            <span className="text-xs text-slate-500 font-normal">{s.label}</span>
-            <span className="text-sm font-semibold text-slate-800">{s.value}</span>
-          </div>
-        ))}
+        <KpiCard
+          icon={HandHeart}
+          label="Total Donated to NGOs"
+          value={`₹${totalCauseFunds.toLocaleString("en-IN")}`}
+          sub="50% direct cause allocation"
+          color="text-emerald-600"
+          bg="bg-emerald-50"
+        />
+        <KpiCard
+          icon={Award}
+          label="Designer Royalties Paid"
+          value={`₹${Math.round((totalCauseFunds / 50) * 3).toLocaleString("en-IN")}`}
+          sub="3% royalty to student creators"
+          color="text-rose-600"
+          bg="bg-rose-50"
+        />
+        <KpiCard
+          icon={Shirt}
+          label="Cause Tees Distributed"
+          value={totalTeesSold.toLocaleString("en-IN")}
+          sub="Empowerment products sold"
+          color="text-indigo-600"
+          bg="bg-indigo-50"
+        />
+        <KpiCard
+          icon={Heart}
+          label="Student Artists & Causes"
+          value="6 Artists · 4 NGOs"
+          sub="Geet, ADAPT & Shelter Drives"
+          color="text-amber-600"
+          bg="bg-amber-50"
+        />
       </div>
 
       {/* ── Recent Cause Purchases Card ──────────────────────── */}
@@ -129,7 +142,7 @@ export default function DashboardHome() {
                   const d = rawDate ? new Date(rawDate) : null
                   const formattedDate = d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
                   const formattedTime = d ? d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : ""
-                  const imgSrc = (o.product as any)?.image || "/assets/shop-musical-trance-front.jpg"
+                  const imgSrc = (o.product as any)?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
 
                   return (
                     <tr key={o.order_id} className="hover:bg-slate-50/60 transition-colors">
@@ -174,7 +187,8 @@ export default function DashboardHome() {
                             alt=""
                             className="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                              (e.target as HTMLImageElement).onerror = null;
+                              (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
                             }}
                           />
                           <div>
@@ -356,11 +370,12 @@ export default function DashboardHome() {
                 </p>
                 <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 text-xs">
                   <img
-                    src={selectedOrder.product?.image || "/assets/shop-musical-trance-front.jpg"}
+                    src={selectedOrder.product?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"}
                     alt=""
                     className="w-14 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                      (e.target as HTMLImageElement).onerror = null;
+                      (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
                     }}
                   />
                   <div className="flex-1 min-w-0">
@@ -398,16 +413,17 @@ export default function DashboardHome() {
   )
 }
 
-function KpiCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: string; color?: string; bg?: string }) {
+function KpiCard({ icon: Icon, label, value, sub, color, bg }: { icon: any; label: string; value: string; sub?: string; color?: string; bg?: string }) {
   return (
-    <Card className="p-4 border border-slate-200 shadow-2xs">
+    <Card className="p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
       <div className="flex items-center gap-3.5">
         <div className={`p-2.5 rounded-lg ${bg || "bg-slate-100"} shrink-0`}>
           <Icon className={`w-5 h-5 ${color || "text-slate-600"}`} />
         </div>
-        <div>
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-xl font-semibold text-slate-900 mt-0.5">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-slate-500 truncate">{label}</p>
+          <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
+          {sub && <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{sub}</p>}
         </div>
       </div>
     </Card>

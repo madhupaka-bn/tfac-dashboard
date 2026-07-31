@@ -17,6 +17,7 @@ interface Product {
   final_price: number
   sizes: string[]
   sizeStock?: Record<string, number>
+  isSoldOut?: boolean
   image: string
   productUrl?: string
   description: string
@@ -77,6 +78,7 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {paginated.map((product) => {
             const hasDiscount = product.discount > 0
+            const isSoldOut = product.isSoldOut || !product.sizes || product.sizes.length === 0
 
             return (
               <div
@@ -120,7 +122,7 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
 
                   {/* Available Sizes / Sold Out Tag */}
                   <div className="flex items-center gap-1 flex-wrap min-h-[24px]">
-                    {product.sizes && product.sizes.length > 0 ? (
+                    {!isSoldOut && product.sizes && product.sizes.length > 0 ? (
                       <>
                         <span className="text-[11px] text-muted-foreground mr-1">Sizes:</span>
                         {product.sizes.map((s) => (
@@ -130,7 +132,7 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                         ))}
                       </>
                     ) : (
-                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded bg-rose-50 text-rose-600 border border-rose-200 uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-rose-600">
                         Sold Out
                       </span>
                     )}

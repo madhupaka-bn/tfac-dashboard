@@ -9,6 +9,8 @@ export interface Product {
   discount: number
   final_price: number
   sizes: string[]
+  sizeStock?: Record<string, number>
+  isSoldOut?: boolean
   image: string
   productUrl?: string
   description: string
@@ -24,6 +26,8 @@ const initialWebsiteProducts: Product[] = [
     discount: 0,
     final_price: 799,
     sizes: ["S", "M", "L", "XL"],
+    sizeStock: { S: 2, M: 3, L: 6, XL: 2 },
+    isSoldOut: false,
     image: "https://teesforacause.co/assets/shop-musical-trance-front.jpg",
     productUrl: "https://teesforacause.co/product/stay-in-the-musical-trance",
     description: "Designed by student artist Deeksha Deulkar, capturing raw emotion and power of music.",
@@ -37,6 +41,8 @@ const initialWebsiteProducts: Product[] = [
     discount: 0,
     final_price: 799,
     sizes: ["S", "M", "L", "XL"],
+    sizeStock: { S: 2, M: 3, L: 2, XL: 1 },
+    isSoldOut: false,
     image: "https://teesforacause.co/assets/shop-cn-tower-front.jpg",
     productUrl: "https://teesforacause.co/product/cn-tower",
     description: "Designed by student artist Aarav Malkani, a tribute to urban nightscapes.",
@@ -49,7 +55,9 @@ const initialWebsiteProducts: Product[] = [
     price: 799,
     discount: 0,
     final_price: 799,
-    sizes: ["S", "M", "L", "XL"],
+    sizes: [],
+    sizeStock: { XS: 0, S: 0, M: 0, L: 0, XL: 0 },
+    isSoldOut: true,
     image: "https://teesforacause.co/assets/shop-coffee-pocket-light.jpg",
     productUrl: "https://teesforacause.co/product/red-bean",
     description: "Designed by 15-year-old Maahi in collaboration with Geet Foundation.",
@@ -62,7 +70,9 @@ const initialWebsiteProducts: Product[] = [
     price: 799,
     discount: 0,
     final_price: 799,
-    sizes: ["S", "M", "L", "XL"],
+    sizes: [],
+    sizeStock: { XS: 0, S: 0, M: 0, L: 0, XL: 0 },
+    isSoldOut: true,
     image: "https://teesforacause.co/assets/shop-coffee-pocket-teal.jpg",
     productUrl: "https://teesforacause.co/product/matcha",
     description: "Teal pocket-style coffee brewer art.",

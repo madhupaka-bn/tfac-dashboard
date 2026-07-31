@@ -242,11 +242,12 @@ export function OrdersTable({
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2.5">
                           <img
-                            src={(order.product as any)?.image || "/assets/shop-musical-trance-front.jpg"}
+                            src={(order.product as any)?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"}
                             alt=""
                             className="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                              (e.target as HTMLImageElement).onerror = null;
+                              (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
                             }}
                           />
                           <div>
@@ -426,11 +427,12 @@ export function OrdersTable({
                 </p>
                 <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 text-xs">
                   <img
-                    src={(selectedOrder.product as any)?.image || "/assets/shop-musical-trance-front.jpg"}
+                    src={(selectedOrder.product as any)?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"}
                     alt=""
                     className="w-14 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/assets/shop-musical-trance-front.jpg";
+                      (e.target as HTMLImageElement).onerror = null;
+                      (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
                     }}
                   />
                   <div className="flex-1 min-w-0">

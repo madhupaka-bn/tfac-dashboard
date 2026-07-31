@@ -77,7 +77,7 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       setFormData(product)
       const existingImgs = product.images && product.images.length > 0
         ? product.images
-        : product.image ? [product.image] : ["/assets/shop-musical-trance-front.jpg"]
+        : product.image ? [product.image] : ["https://teesforacause.co/assets/shop-musical-trance-front.jpg"]
       setImagePreviews(existingImgs)
 
       const initialStock: Record<string, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
@@ -185,13 +185,14 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
     setErrors({})
     const activeSizes = ALL_SIZES.filter((s) => (sizeStockMap[s] ?? 0) > 0)
     const finalPrice = (formData.price || 0) - ((formData.discount || 0) / 100) * (formData.price || 0)
-    const primaryImage = imagePreviews[0] || formData.image || "/assets/shop-musical-trance-front.jpg"
+    const primaryImage = imagePreviews[0] || formData.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
 
     const payload = {
       ...formData,
       image: primaryImage,
       images: imagePreviews.length > 0 ? imagePreviews : [primaryImage],
-      sizes: activeSizes.length > 0 ? activeSizes : ["M"],
+      sizes: activeSizes,
+      isSoldOut: activeSizes.length === 0,
       sizeStock: sizeStockMap,
       final_price: Math.round(finalPrice),
       id: product?.id || Date.now(),
