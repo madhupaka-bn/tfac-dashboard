@@ -12,6 +12,8 @@ import {
   Palette,
   LogOut,
   ChevronLeft,
+  ChevronRight,
+  Menu,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -25,7 +27,8 @@ export function Sidebar() {
     { href: "/dashboard/customers", label: "Customers", icon: Users },
     { href: "/dashboard/products", label: "Products", icon: Shirt },
     { href: "/dashboard/ngo", label: "NGO & Donations", icon: HeartHandshake },
-    { href: "/dashboard/designers", label: "Designers", icon: Palette },
+    { href: "/dashboard/designers", label: "Designers", icon: Users },
+    { href: "/dashboard/artworks", label: "Artwork Submissions", icon: Palette },
   ]
 
   const handleLogout = () => {
@@ -35,34 +38,42 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`h-screen sticky top-0 z-30 flex flex-col bg-white border-r border-border shadow-sm transition-all duration-300 ease-in-out ${
+      className={`h-screen sticky top-0 z-30 flex flex-col bg-white border-r border-slate-200 shadow-2xs transition-all duration-300 ease-in-out ${
         isOpen ? "w-64" : "w-16"
       }`}
     >
-      {/* HEADER */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-        <span
-          className={`text-lg font-extrabold text-emerald-600 transition-opacity duration-300 ${
-            isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          TFAC
-        </span>
-        <button
-          onClick={() => setIsOpen((v) => !v)}
-          aria-label="Toggle sidebar"
-          className="p-2 rounded-md hover:bg-slate-100 transition cursor-pointer text-slate-500"
-        >
-          <ChevronLeft
-            size={20}
-            className={`transition-transform duration-300 ${
-              isOpen ? "rotate-0" : "rotate-180"
-            }`}
-          />
-        </button>
+      {/* HEADER WITH PROMINENT TOGGLE BUTTON */}
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-slate-100 min-h-[57px]">
+        {isOpen ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-black text-slate-900 tracking-wider">TFAC</span>
+              <span className="text-[10px] font-extrabold bg-[#f4efe6] text-[#735e38] border border-[#e2d6c1] px-2 py-0.5 rounded-full uppercase">
+                Dashboard
+              </span>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+              className="p-1.5 rounded-lg bg-slate-100 hover:bg-[#f4efe6] hover:text-[#735e38] text-slate-600 transition cursor-pointer border border-slate-200"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setIsOpen(true)}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+            className="w-9 h-9 mx-auto rounded-lg bg-[#f4efe6] hover:bg-[#d4c4a8] text-slate-900 flex items-center justify-center transition cursor-pointer border border-[#e2d6c1] shadow-2xs"
+          >
+            <ChevronRight size={20} className="text-slate-900 font-bold" />
+          </button>
+        )}
       </div>
 
-      {/* NAV */}
+      {/* NAV LINKS */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-hidden">
         {links.map((link) => {
           const Icon = link.icon
@@ -74,44 +85,36 @@ export function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+              title={!isOpen ? link.label : undefined}
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                 isActive
-                  ? "bg-emerald-600 text-white font-semibold shadow-xs"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              }`}
+                  ? "bg-[#d4c4a8] text-slate-900 font-bold shadow-2xs border-l-4 border-[#8a734e]"
+                  : "text-slate-600 hover:bg-[#f4efe6] hover:text-slate-900"
+              } ${!isOpen ? "justify-center px-0" : ""}`}
             >
               <Icon size={20} className="shrink-0" />
 
-              <span
-                className={`whitespace-nowrap transition-all duration-300 ${
-                  isOpen
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 -translate-x-2 pointer-events-none"
-                }`}
-              >
-                {link.label}
-              </span>
+              {isOpen && (
+                <span className="whitespace-nowrap transition-all duration-200">
+                  {link.label}
+                </span>
+              )}
             </Link>
           )
         })}
       </nav>
 
-      {/* FOOTER */}
-      <div className="border-t border-accent/10 p-2">
+      {/* FOOTER / LOGOUT */}
+      <div className="border-t border-slate-100 p-2">
         <button
           onClick={handleLogout}
-          className="group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground/70 hover:bg-red-500/10 hover:text-red-600 transition-colors"
+          title={!isOpen ? "Logout" : undefined}
+          className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-colors ${
+            !isOpen ? "justify-center px-0" : ""
+          }`}
         >
           <LogOut size={18} className="shrink-0" />
-          <span
-            className={`transition-all duration-300 ${
-              isOpen
-                ? "opacity-100 translate-x-0"
-                : "opacity-0 -translate-x-2 pointer-events-none"
-            }`}
-          >
-            Logout
-          </span>
+          {isOpen && <span className="whitespace-nowrap">Logout</span>}
         </button>
       </div>
     </aside>

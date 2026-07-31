@@ -23,6 +23,7 @@ import {
   Search, ChevronLeft, ChevronRight, ShoppingBag,
   Loader2, ChevronsLeft, ChevronsRight, Eye, MapPin, User, Mail, Phone, Calendar, CreditCard, Shirt, PackageCheck
 } from "lucide-react"
+import { TableActionButton } from "@/components/ui/table-action-button"
 
 interface Order {
   id: string
@@ -54,6 +55,8 @@ interface OrdersTableProps {
   onSearch: (value: string) => void
   onStatusChange: (value: "all" | "Success" | "Failed" | "Pending") => void
   onPageChange: (page: number) => void
+  hideFilterRow?: boolean
+  hidePagination?: boolean
 }
 
 const STATUS_CONFIG = {
@@ -73,6 +76,8 @@ export function OrdersTable({
   onSearch,
   onStatusChange,
   onPageChange,
+  hideFilterRow = false,
+  hidePagination = false,
 }: OrdersTableProps) {
   const [localSearch, setLocalSearch] = useState(search)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -111,41 +116,43 @@ export function OrdersTable({
 
   return (
     <div className="space-y-5">
-      {/* ── Filter Row ──────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input
-            placeholder="Search order ID, payment ID, customer name, email..."
-            value={localSearch}
-            onChange={(e) => {
-              setLocalSearch(e.target.value)
-              debouncedSearch(e.target.value)
-            }}
-            className="pl-9 bg-white border-slate-200 text-sm shadow-xs focus-visible:ring-1"
-          />
-        </div>
+      {/* ── Filter Row (Hidden if hideFilterRow is true) ──────────────────────── */}
+      {!hideFilterRow && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Search order ID, payment ID, customer name, email..."
+              value={localSearch}
+              onChange={(e) => {
+                setLocalSearch(e.target.value)
+                debouncedSearch(e.target.value)
+              }}
+              className="pl-9 bg-white border-slate-200 text-sm shadow-xs focus-visible:ring-1"
+            />
+          </div>
 
-        {/* Status filter */}
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            onStatusChange(v as "all" | "Success" | "Failed" | "Pending")
-            onPageChange(1)
-          }}
-        >
-          <SelectTrigger className="w-[170px] bg-white border-slate-200 text-sm font-normal">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border-slate-200 shadow-md">
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Success">Success</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          {/* Status filter */}
+          <Select
+            value={status}
+            onValueChange={(v) => {
+              onStatusChange(v as "all" | "Success" | "Failed" | "Pending")
+              onPageChange(1)
+            }}
+          >
+            <SelectTrigger className="w-[170px] bg-white border-slate-200 text-sm font-normal">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200 shadow-md">
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Success">Success</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* ── Table ───────────────────────────────────────────── */}
       <div className="rounded-xl border border-slate-200 overflow-hidden shadow-xs bg-white">
@@ -156,11 +163,10 @@ export function OrdersTable({
               <tr className="bg-slate-50/60 border-b border-slate-200">
                 <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider w-12 text-xs">#</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order Date</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order ID</th>
-                <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Status</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[180px] text-xs">Customer</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[160px] text-xs">Product</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Amount</th>
+                <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Status</th>
                 <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Action</th>
               </tr>
             </thead>
@@ -172,17 +178,16 @@ export function OrdersTable({
                   <tr key={i} className="animate-pulse">
                     <td className="px-4 py-4"><Skeleton className="h-4 w-4 mx-auto" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-24 mb-1" /><Skeleton className="h-3 w-16" /></td>
-                    <td className="px-4 py-4"><Skeleton className="h-4 w-28" /></td>
-                    <td className="px-4 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-28 mb-1" /><Skeleton className="h-3 w-20" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-24 mb-1" /><Skeleton className="h-3 w-14" /></td>
                     <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
                     <td className="px-4 py-4 text-center"><Skeleton className="h-8 w-8 rounded-md mx-auto" /></td>
                   </tr>
                 ))
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center">
+                  <td colSpan={7} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-400">
                       <ShoppingBag className="w-10 h-10 opacity-40" />
                       <p className="text-sm font-normal">No orders found</p>
@@ -209,20 +214,6 @@ export function OrdersTable({
                         {order.time && (
                           <p className="text-xs text-slate-400 font-normal mt-0.5">{order.time}</p>
                         )}
-                      </td>
-
-                      {/* Order ID */}
-                      <td className="px-4 py-3.5">
-                        <span className="font-mono text-xs bg-slate-100/80 text-slate-700 px-2 py-0.5 rounded font-normal whitespace-nowrap border border-slate-200">
-                          {order.id ? order.id.slice(0, 14) + "…" : "—"}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${cfg.cls}`}>
-                          {cfg.label}
-                        </span>
                       </td>
 
                       {/* Customer */}
@@ -270,17 +261,16 @@ export function OrdersTable({
                         })}
                       </td>
 
+                      {/* Status */}
+                      <td className="px-4 py-3.5">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border ${cfg.cls}`}>
+                          {cfg.label}
+                        </span>
+                      </td>
+
                       {/* Action Button */}
                       <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setSelectedOrder(order)}
-                          className="w-8 h-8 p-0 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs border border-emerald-700/30"
-                          title="View order details"
-                        >
-                          <Eye className="w-4 h-4 text-white" />
-                        </Button>
+                        <TableActionButton onClick={() => setSelectedOrder(order)} title="View order details" />
                       </td>
                     </tr>
                   )
@@ -292,7 +282,7 @@ export function OrdersTable({
       </div>
 
       {/* ── Pagination ──────────────────────────────────────── */}
-      {totalPages > 0 && (
+      {!hidePagination && totalPages > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
           <p className="text-xs text-slate-500">
             Page <span className="font-semibold text-slate-800">{currentPage}</span> of <span className="font-semibold text-slate-800">{totalPages}</span>

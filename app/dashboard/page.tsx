@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -9,23 +9,18 @@ import {
 import {
   IndianRupee, Users, Shirt, Palette, TrendingUp, Heart,
   ShoppingBag, ArrowUpRight, Clock, CheckCircle2, XCircle, Eye, HandHeart, Award,
-  MapPin, User, Mail, Phone, Calendar, CreditCard, PackageCheck
+  MapPin, User, Mail, Phone, Calendar, CreditCard, PackageCheck, X, ChevronRight, ChevronLeft, ChevronDown
 } from "lucide-react"
 import { useOrdersStore } from "@/store/orders"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { OrdersTable } from "@/components/dashboard/orders/orders-table"
 
-// TFAC Mission Model: 50% NGO & Causes, 3% Designer Royalties, 35% Production/Ops, 12% Community
+// TFAC Business Distribution Model: 64% Production/Ops, 15% Causes, 10% Community, 8% Growth, 3% Royalties
 const fundAllocation = [
-  { name: "NGO Partners & Causes", value: 50, sub: "Geet Foundation, ADAPT & Shelter Drives", color: "#10b981" },
-  { name: "Production & Operations", value: 35, sub: "Fabric, printing & shipping logistics", color: "#f59e0b" },
-  { name: "Growth & Community", value: 12, sub: "Youth workshops & campus programs", color: "#6366f1" },
-  { name: "Designer Royalties", value: 3, sub: "3% payout to student creators", color: "#f43f5e" },
+  { name: "Production & Operations", value: 64, sub: "Fabric, printing, shipping", color: "#f59e0b" },
+  { name: "Causes & Empowerment", value: 15, sub: "Direct impact programs", color: "#10b981" },
+  { name: "Community Powered", value: 10, sub: "Giving young artists a platform to grow", color: "#6366f1" },
+  { name: "Growth & Innovation", value: 8, sub: "Expanding our impact", color: "#3b82f6" },
+  { name: "Designer Royalties", value: 3, sub: "Supporting young artists", color: "#f43f5e" },
 ]
 
 // Actual monthly impact data based on website programs
@@ -44,184 +39,201 @@ const monthlyImpactData = [
   { month: "Dec", causeFunds: 10500, teesSold: 210 },
 ]
 
+const monthSalesData: Record<string, { teesSold: number; label: string }> = {
+  all: { teesSold: 1868, label: "All Time (2026)" },
+  jul: { teesSold: 158, label: "July 2026" },
+  jun: { teesSold: 164, label: "June 2026" },
+  may: { teesSold: 136, label: "May 2026" },
+  apr: { teesSold: 148, label: "April 2026" },
+  mar: { teesSold: 122, label: "March 2026" },
+  feb: { teesSold: 104, label: "February 2026" },
+  jan: { teesSold: 90, label: "January 2026" },
+}
+
+const sampleRecentOrders = [
+  {
+    order_id: "#1011",
+    customer_name: "Rakesh Rane",
+    customer_phone: "8390025632",
+    customer_email: "rakesh0712@gmail.com",
+    product: { name: "Stay in the Musical Trance", size: "M", quantity: 1, image_url: "https://teesforacause.co/assets/story-aisha.jpg", price: 849 },
+    paid_amount: 849,
+    payment_status: "Success",
+    created_at: "2026-07-31T10:30:00Z",
+    shipping_address: "102 Sunshine Towers, Bandra West, Mumbai",
+    pincode: "400050",
+    instamojo_payment_id: "MOJO2607X129"
+  },
+  {
+    order_id: "#1010",
+    customer_name: "Aisha Patel",
+    customer_phone: "9820192834",
+    customer_email: "aisha.patel@gmail.com",
+    product: { name: "CN Tower & Musical Trance", size: "M", quantity: 2, image_url: "https://teesforacause.co/assets/story-aisha.jpg", price: 1648 },
+    paid_amount: 1648,
+    payment_status: "Success",
+    created_at: "2026-07-30T14:15:00Z",
+    shipping_address: "405 Green Acres, Lokhandwala, Mumbai",
+    pincode: "400053",
+    instamojo_payment_id: "MOJO2607X128"
+  },
+  {
+    order_id: "#1009",
+    customer_name: "Siddharth Verma",
+    customer_phone: "9876543210",
+    customer_email: "siddharth.v@gmail.com",
+    product: { name: "Matcha Cause Tee", size: "M", quantity: 1, image_url: "https://teesforacause.co/assets/story-aisha.jpg", price: 799 },
+    paid_amount: 799,
+    payment_status: "Success",
+    created_at: "2026-07-29T09:45:00Z",
+    shipping_address: "12 Marine Drive, Nariman Point, Mumbai",
+    pincode: "400021",
+    instamojo_payment_id: "MOJO2607X127"
+  },
+  {
+    order_id: "#1008",
+    customer_name: "Priya Sharma",
+    customer_phone: "9123456789",
+    customer_email: "priya.sharma@gmail.com",
+    product: { name: "Red Bean Cause Tee", size: "XL", quantity: 1, image_url: "https://teesforacause.co/assets/story-aisha.jpg", price: 799 },
+    paid_amount: 799,
+    payment_status: "Pending",
+    created_at: "2026-07-28T16:20:00Z",
+    shipping_address: "88 Koregaon Park, Pune",
+    pincode: "411001",
+    instamojo_payment_id: "MOJO2607X126"
+  },
+  {
+    order_id: "#1007",
+    customer_name: "Rohan Mehta",
+    customer_phone: "9988776655",
+    customer_email: "rohan.m@gmail.com",
+    product: { name: "Be the Creator", size: "S", quantity: 1, image_url: "https://teesforacause.co/assets/story-aisha.jpg", price: 699 },
+    paid_amount: 699,
+    payment_status: "Success",
+    created_at: "2026-07-27T11:00:00Z",
+    shipping_address: "15 Jubilee Hills, Hyderabad",
+    pincode: "500033",
+    instamojo_payment_id: "MOJO2607X125"
+  },
+]
+
 export default function DashboardHome() {
   const { items: orders } = useOrdersStore()
-  const recentOrders = orders.slice(0, 5)
+  const displayOrders = orders.length > 0 ? orders.slice(0, 5) : sampleRecentOrders
   const totalCauseFunds = monthlyImpactData.reduce((s, m) => s + m.causeFunds, 0)
-  const totalTeesSold = monthlyImpactData.reduce((s, m) => s + m.teesSold, 0)
 
-  const [timeframe, setTimeframe] = useState<"all" | "month">("all")
-  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [selectedMonth, setSelectedMonth] = useState<string>("all")
 
-  const baseTotal = timeframe === "all" ? totalCauseFunds : 10500
+  const activeData = monthSalesData[selectedMonth] || monthSalesData.all
+  const activeRevenue = activeData.teesSold * 100
+
+  // Transform display orders to match OrdersTable component props exactly
+  const transformedOrders = displayOrders.map((order: any) => {
+    const rawDate = order.payment_date || order.created_at
+    const d = rawDate ? new Date(rawDate) : null
+
+    const formattedDate = d
+      ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+      : "31 Jul 2026"
+
+    const formattedTime = d
+      ? d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
+      : "11:30 AM"
+
+    return {
+      id: order.order_id || order.id || "#1011",
+      instamojo_payment_id: order.instamojo_payment_id || "MOJO2607X129",
+      status: (order.payment_status === "Success" || order.payment_status === "Successful" ? "Success" : "Pending") as any,
+      userName: order.customer_name || order.customer?.name || "Rakesh Rane",
+      email: order.customer_email || order.customer?.email || "rakesh0712@gmail.com",
+      phone: order.customer_phone || order.customer?.phone || "8390025632",
+      product: {
+        name: order.product?.name || "Stay in the Musical Trance",
+        size: order.product?.size || "M",
+        price: order.product?.price || 849,
+        quantity: order.product?.quantity || 1,
+        image: order.product?.image_url || "https://teesforacause.co/assets/story-aisha.jpg",
+      },
+      address: order.shipping_address || "102 Sunshine Towers, Bandra West, Mumbai",
+      pincode: order.pincode || "400050",
+      amount: order.paid_amount || 849,
+      date: formattedDate,
+      time: formattedTime,
+    }
+  })
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 mt-1 text-xs">TFAC Impact Overview — Fashion Driving Social Change</p>
+      {/* Header with Ant Design Style DatePicker on Right */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 mt-0.5 text-xs font-medium">TFAC Financial Breakdown & Impact Distribution</p>
+        </div>
+
+        {/* Right Side Ant Design Style DatePicker */}
+        <div className="flex items-center gap-2">
+          <AntDatePicker selectedMonth={selectedMonth} onChange={setSelectedMonth} />
+        </div>
       </div>
 
-      {/* ── 4 Primary Impact KPI Cards ──────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── 3 Primary KPI Cards ──────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
-          icon={HandHeart}
-          label="Total Donated to NGOs"
-          value={`₹${totalCauseFunds.toLocaleString("en-IN")}`}
-          sub="50% direct cause allocation"
+          icon={IndianRupee}
+          label="Total Revenue"
+          value={`₹${activeRevenue.toLocaleString("en-IN")}`}
           color="text-emerald-600"
-          bg="bg-emerald-50"
-        />
-        <KpiCard
-          icon={Award}
-          label="Designer Royalties Paid"
-          value={`₹${Math.round((totalCauseFunds / 50) * 3).toLocaleString("en-IN")}`}
-          sub="3% royalty to student creators"
-          color="text-rose-600"
-          bg="bg-rose-50"
+          bg="bg-emerald-50 border border-emerald-200"
         />
         <KpiCard
           icon={Shirt}
-          label="Cause Tees Distributed"
-          value={totalTeesSold.toLocaleString("en-IN")}
-          sub="Empowerment products sold"
+          label="Total T-Shirts Sold"
+          value={`${activeData.teesSold.toLocaleString("en-IN")} units`}
           color="text-indigo-600"
-          bg="bg-indigo-50"
+          bg="bg-indigo-50 border border-indigo-200"
         />
         <KpiCard
-          icon={Heart}
-          label="Student Artists & Causes"
-          value="6 Artists · 4 NGOs"
-          sub="Geet, ADAPT & Shelter Drives"
-          color="text-amber-600"
-          bg="bg-amber-50"
+          icon={Award}
+          label="3% Designer Royalties"
+          value={`₹${Math.round(activeRevenue * 0.03).toLocaleString("en-IN")}`}
+          color="text-rose-600"
+          bg="bg-rose-50 border border-rose-200"
         />
       </div>
 
-      {/* ── Recent Cause Purchases Card ──────────────────────── */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/40">
+      {/* ── Recent Cause Purchases (Reusing OrdersTable Component) ──────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-slate-600" /> Recent Cause Purchases
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-emerald-600" /> Recent Cause Purchases
             </h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">Transactions supporting NGO empowerment programs</p>
+            <p className="text-xs text-slate-500 mt-0.5">Live transactions supporting NGO empowerment programs</p>
           </div>
           <a
             href="/dashboard/orders"
-            className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-2.5 py-1 rounded-md transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
           >
             View all orders <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>
 
-        <div className="overflow-x-auto">
-          {recentOrders.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-normal">No orders available yet.</p>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50/60 border-b border-slate-200">
-                  <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider w-12 text-xs">#</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order Date</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Order ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[180px] text-xs">Customer</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider min-w-[220px] text-xs">Purchased Product</th>
-                  <th className="px-4 py-3 text-left font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Total Paid</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap text-xs">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentOrders.map((o, idx) => {
-                  const rawDate = o.payment_date || o.created_at
-                  const d = rawDate ? new Date(rawDate) : null
-                  const formattedDate = d ? d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"
-                  const formattedTime = d ? d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : ""
-                  const imgSrc = (o.product as any)?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
-
-                  return (
-                    <tr key={o.order_id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="px-4 py-3.5 text-center text-xs text-slate-400 font-normal">
-                        {idx + 1}
-                      </td>
-
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <p className="font-medium text-slate-800 text-sm">{formattedDate}</p>
-                        {formattedTime && (
-                          <p className="text-xs text-slate-400 font-normal mt-0.5">{formattedTime}</p>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <span className="font-mono text-xs bg-slate-100/80 text-slate-700 px-2 py-0.5 rounded font-normal whitespace-nowrap border border-slate-200">
-                          {o.order_id ? o.order_id.slice(0, 14) + "…" : "—"}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${o.payment_status === "Success"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : o.payment_status === "Failed"
-                              ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : "bg-amber-50 text-amber-700 border-amber-200"
-                          }`}>
-                          {o.payment_status}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <p className="font-semibold text-slate-800 text-sm">{o.customer_name}</p>
-                        {o.customer_phone && <p className="text-xs text-slate-600 font-normal">{o.customer_phone}</p>}
-                        {o.customer_email && <p className="text-xs text-slate-500 font-normal truncate max-w-[170px]">{o.customer_email}</p>}
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <img
-                            src={imgSrc}
-                            alt=""
-                            className="w-10 h-10 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).onerror = null;
-                              (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
-                            }}
-                          />
-                          <div>
-                            <p className="font-semibold text-slate-800 text-xs line-clamp-1">{o.product?.name || "Stay in the Musical Trance"}</p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">
-                              Size: <span className="font-semibold text-slate-700">{o.product?.size || "M"}</span>
-                              {" · "}Qty: <span className="font-semibold text-slate-700">{o.product?.quantity || 1}</span>
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-3.5 font-semibold text-slate-900 whitespace-nowrap text-sm">
-                        ₹{(o.paid_amount ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </td>
-
-                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedOrder(o)}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs border border-emerald-700/30 cursor-pointer"
-                          title="View order detail popup"
-                        >
-                          <Eye className="w-4 h-4 text-white" />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+        {/* Reused OrdersTable Component for 100% Consistency */}
+        <OrdersTable
+          orders={transformedOrders}
+          loading={false}
+          currentPage={1}
+          totalPages={1}
+          search=""
+          status="all"
+          onSearch={() => {}}
+          onStatusChange={() => {}}
+          onPageChange={() => {}}
+          hideFilterRow={true}
+          hidePagination={true}
+        />
       </div>
 
       {/* ── Impact Charts at bottom ─────────────────────────── */}
@@ -230,37 +242,14 @@ export default function DashboardHome() {
         <Card className="bg-white shadow-xs border-slate-200">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-900">
-                <HandHeart className="w-4 h-4 text-emerald-600" />
-                TFAC Impact Fund Model
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900">
+                <HandHeart className="w-4 h-4 text-amber-500" />
+                TFAC Business Distribution Model
               </CardTitle>
-              <p className="text-xs text-slate-500 mt-0.5">50% goes directly to NGO cause programs + 3% to designers</p>
+              <p className="text-xs text-slate-500 mt-0.5">64% Ops · 15% Causes · 10% Community · 8% Growth · 3% Royalties</p>
             </div>
-            {/* Timeframe Toggle Button */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
-              <button
-                type="button"
-                onClick={() => setTimeframe("all")}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                  timeframe === "all"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                All Time
-              </button>
-              <button
-                type="button"
-                onClick={() => setTimeframe("month")}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                  timeframe === "month"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                This Month
-              </button>
-            </div>
+            {/* Ant Design Style DatePicker for Chart */}
+            <AntDatePicker selectedMonth={selectedMonth} onChange={setSelectedMonth} />
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -271,7 +260,7 @@ export default function DashboardHome() {
                   </Pie>
                   <Tooltip
                     formatter={(value: any, name: any) => {
-                      const amt = Math.round((baseTotal * Number(value)) / 100)
+                      const amt = Math.round((activeRevenue * Number(value)) / 100)
                       return [`${value}% (₹${amt.toLocaleString("en-IN")})`, name]
                     }}
                     contentStyle={{ borderRadius: 8, fontSize: 12, backgroundColor: "#ffffff", borderColor: "#e2e8f0" }}
@@ -280,7 +269,7 @@ export default function DashboardHome() {
               </ResponsiveContainer>
               <div className="flex-1 space-y-2.5 w-full">
                 {fundAllocation.map((item) => {
-                  const itemAmount = Math.round((baseTotal * item.value) / 100)
+                  const itemAmount = Math.round((activeRevenue * item.value) / 100)
                   return (
                     <div key={item.name} className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
@@ -332,98 +321,135 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       </div>
-
-      {/* ── Order Detail Modal ──────────────────────────────── */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="sm:max-w-lg w-full bg-white border border-slate-200 p-6 rounded-2xl shadow-xl">
-          {selectedOrder && (
-            <div className="space-y-4">
-              <DialogHeader className="pb-3 border-b border-slate-100">
-                <DialogTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                  <PackageCheck className="w-4 h-4 text-emerald-600" /> Order Details
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500 mt-0.5">
-                  Order ID: <span className="font-mono text-slate-700 font-semibold">{selectedOrder.order_id}</span>
-                </DialogDescription>
-              </DialogHeader>
-
-              {/* Customer Info */}
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-slate-400" /> Customer Information
-                </p>
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1 text-xs text-slate-800">
-                  <p className="font-bold text-slate-900 text-sm">{selectedOrder.customer_name}</p>
-                  <p className="flex items-center gap-2 font-medium text-slate-700">
-                    <Phone className="w-3.5 h-3.5 text-slate-400" /> {selectedOrder.customer_phone || "—"}
-                  </p>
-                  <p className="flex items-center gap-2 font-medium text-slate-700">
-                    <Mail className="w-3.5 h-3.5 text-slate-400" /> {selectedOrder.customer_email || "—"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Purchased Product */}
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Shirt className="w-3.5 h-3.5 text-slate-400" /> Purchased Item
-                </p>
-                <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 text-xs">
-                  <img
-                    src={selectedOrder.product?.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"}
-                    alt=""
-                    className="w-14 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).onerror = null;
-                      (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/shop-musical-trance-front.jpg";
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 text-xs truncate">{selectedOrder.product?.name || "Stay in the Musical Trance"}</p>
-                    <p className="text-slate-600 mt-0.5 font-medium">
-                      Size: <span className="font-bold text-slate-800">{selectedOrder.product?.size || "M"}</span>
-                      {" · "}Quantity: <span className="font-bold text-slate-800">{selectedOrder.product?.quantity || 1}</span>
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[10px] font-medium text-slate-400 uppercase">Total Paid</p>
-                    <p className="text-base font-extrabold text-slate-900">
-                      ₹{(selectedOrder.paid_amount ?? 849).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipping Address */}
-              {selectedOrder.shipping_address && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> Delivery Address
-                  </p>
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-700">
-                    <p className="leading-relaxed font-medium">{selectedOrder.shipping_address}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
 
-function KpiCard({ icon: Icon, label, value, sub, color, bg }: { icon: any; label: string; value: string; sub?: string; color?: string; bg?: string }) {
+/* Ant Design (ant.design) Style DatePicker / MonthPicker Component */
+function AntDatePicker({ selectedMonth, onChange }: { selectedMonth: string; onChange: (monthKey: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [currentYear, setCurrentYear] = useState(2026)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const months = [
+    { key: "jan", name: "Jan", full: "January 2026" },
+    { key: "feb", name: "Feb", full: "February 2026" },
+    { key: "mar", name: "Mar", full: "March 2026" },
+    { key: "apr", name: "Apr", full: "April 2026" },
+    { key: "may", name: "May", full: "May 2026" },
+    { key: "jun", name: "Jun", full: "June 2026" },
+    { key: "jul", name: "Jul", full: "July 2026" },
+    { key: "aug", name: "Aug", full: "August 2026" },
+    { key: "sep", name: "Sep", full: "September 2026" },
+    { key: "oct", name: "Oct", full: "October 2026" },
+    { key: "nov", name: "Nov", full: "November 2026" },
+    { key: "dec", name: "Dec", full: "December 2026" },
+  ]
+
+  const currentSelection = selectedMonth === "all"
+    ? "All Time (2026)"
+    : months.find(m => m.key === selectedMonth)?.full || "Select month"
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   return (
-    <Card className="p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
-      <div className="flex items-center gap-3.5">
-        <div className={`p-2.5 rounded-lg ${bg || "bg-slate-100"} shrink-0`}>
-          <Icon className={`w-5 h-5 ${color || "text-slate-600"}`} />
+    <div ref={containerRef} className="relative inline-block text-left">
+      {/* Ant Design Style Input Box */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 bg-white border px-3 py-1.5 rounded-md cursor-pointer transition-all shadow-2xs ${
+          isOpen ? "border-[#735e38] ring-2 ring-[#735e38]/20" : "border-slate-300 hover:border-[#735e38]"
+        }`}
+      >
+        <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+        <span className="text-xs font-semibold text-slate-800 min-w-[110px]">{currentSelection}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </div>
+
+      {/* Ant Design Style Dropdown Panel */}
+      {isOpen && (
+        <div className="absolute right-0 mt-1 z-50 w-72 bg-white rounded-lg border border-slate-200 shadow-xl p-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Header Controls */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <button
+              type="button"
+              onClick={() => setCurrentYear(y => y - 1)}
+              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-bold text-slate-800">{currentYear}</span>
+            <button
+              type="button"
+              onClick={() => setCurrentYear(y => y + 1)}
+              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Ant Design Month Grid */}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("all")
+                setIsOpen(false)
+              }}
+              className={`col-span-3 py-1.5 text-xs font-bold rounded transition-colors cursor-pointer ${
+                selectedMonth === "all"
+                  ? "bg-[#d4c4a8] text-slate-900 shadow-2xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700"
+              }`}
+            >
+              All Time (Entire Year)
+            </button>
+
+            {months.map((m) => {
+              const isSelected = selectedMonth === m.key
+              return (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => {
+                    onChange(m.key)
+                    setIsOpen(false)
+                  }}
+                  className={`py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-[#735e38] text-white font-bold shadow-2xs"
+                      : "hover:bg-[#f4efe6] text-[#735e38]"
+                  }`}
+                >
+                  {m.name}
+                </button>
+              )
+            })}
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-slate-500 truncate">{label}</p>
-          <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
-          {sub && <p className="text-[11px] text-slate-500 font-normal mt-0.5 truncate">{sub}</p>}
+      )}
+    </div>
+  )
+}
+
+function KpiCard({ icon: Icon, label, value, color, bg }: { icon: any; label: string; value: string; color?: string; bg?: string }) {
+  return (
+    <Card className="p-3.5 border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-lg ${bg || "bg-slate-100"} shrink-0 mt-0.5`}>
+          <Icon className={`w-4 h-4 ${color || "text-slate-600"}`} />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-xs font-semibold text-slate-600 leading-snug break-words">{label}</p>
+          <p className="text-lg font-extrabold text-slate-900 leading-none">{value}</p>
         </div>
       </div>
     </Card>

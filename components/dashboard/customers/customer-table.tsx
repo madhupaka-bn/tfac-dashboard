@@ -1,21 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useCallback, useState } from "react"
 import { debounce } from "@/app/constUtil"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Search, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, Users, ShoppingBag, MapPin, Eye, Phone, Mail, User
-} from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { Search, Users, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Eye, Phone, Mail, ShoppingBag } from "lucide-react"
+import { TableActionButton } from "@/components/ui/table-action-button"
 
 interface Customer {
   id: string
@@ -47,7 +39,6 @@ export function CustomersTable({
   onPageChange,
 }: CustomersTableProps) {
   const [localSearch, setLocalSearch] = useState(search)
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   const debouncedSearch = useCallback(
     debounce((value: string) => {
@@ -87,12 +78,12 @@ export function CustomersTable({
             setLocalSearch(e.target.value)
             debouncedSearch(e.target.value)
           }}
-          className="pl-9 bg-white border-slate-200 text-sm shadow-xs focus-visible:ring-1 text-slate-900 placeholder:text-slate-400"
+          className="pl-9 bg-white border-slate-200 text-sm shadow-2xs focus-visible:ring-1 text-slate-900 placeholder:text-slate-400"
         />
       </div>
 
       {/* Customers Table */}
-      <div className="rounded-xl border border-slate-200 overflow-hidden shadow-xs bg-white">
+      <div className="rounded-xl border border-slate-200 overflow-hidden shadow-2xs bg-white">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -136,23 +127,22 @@ export function CustomersTable({
                       </span>
                     </td>
 
-                    {/* Name (Clickable) */}
+                    {/* Name (Clickable link to Profile Page) */}
                     <td className="px-4 py-3.5">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCustomer(customer)}
-                        className="font-bold text-slate-900 hover:text-emerald-600 text-sm transition-colors text-left cursor-pointer"
+                      <Link
+                        href={`/dashboard/customers/${customer.id}`}
+                        className="font-bold text-slate-900 hover:text-slate-600 text-sm transition-colors text-left cursor-pointer hover:underline"
                       >
                         {customer?.name}
-                      </button>
+                      </Link>
                     </td>
 
-                    {/* Phone - High Contrast Dark Text */}
+                    {/* Phone */}
                     <td className="px-4 py-3.5 text-slate-800 font-medium whitespace-nowrap text-xs">
                       {customer?.phone || "—"}
                     </td>
 
-                    {/* Email - High Contrast Dark Text */}
+                    {/* Email */}
                     <td className="px-4 py-3.5 text-slate-800 font-medium max-w-[200px] truncate text-xs">
                       {customer?.email || "—"}
                     </td>
@@ -165,17 +155,11 @@ export function CustomersTable({
                       </span>
                     </td>
 
-                    {/* Action Button */}
+                    {/* Action Button (Navigates to Profile Page) */}
                     <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedCustomer(customer)}
-                        className="w-8 h-8 p-0 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-2xs border border-emerald-700/30 cursor-pointer"
-                        title="View customer details"
-                      >
-                        <Eye className="w-4 h-4 text-white" />
-                      </Button>
+                      <Link href={`/dashboard/customers/${customer.id}`}>
+                        <TableActionButton title="View customer profile page" />
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -265,62 +249,6 @@ export function CustomersTable({
           </div>
         </div>
       )}
-
-      {/* ── Customer Detail Modal ───────────────────────────── */}
-      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-md w-full bg-white border border-slate-200 p-6 rounded-2xl shadow-xl">
-          {selectedCustomer && (
-            <div className="space-y-4">
-              <DialogHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between">
-                <div>
-                  <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <User className="w-4 h-4 text-emerald-600" /> Customer Profile
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
-                    Customer ID: <span className="font-mono text-slate-800 font-bold">#{selectedCustomer.id}</span>
-                  </DialogDescription>
-                </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <ShoppingBag className="w-3.5 h-3.5" /> {selectedCustomer.total_orders} Orders
-                </span>
-              </DialogHeader>
-
-              {/* Personal Details */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Full Name</p>
-                  <p className="font-extrabold text-slate-900 text-sm">{selectedCustomer.name}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Phone Number</p>
-                  <p className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
-                    <Phone className="w-3.5 h-3.5 text-slate-500" /> {selectedCustomer.phone || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400">Email Address</p>
-                  <p className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
-                    <Mail className="w-3.5 h-3.5 text-slate-500" /> {selectedCustomer.email || "—"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Shipping Address */}
-              <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-500" /> Shipping Address
-                </p>
-                <div className="bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 space-y-1">
-                  <p className="leading-relaxed font-semibold">{selectedCustomer.address || "No saved address"}</p>
-                  {selectedCustomer.pincode && (
-                    <p className="font-bold text-slate-900">Pincode: {selectedCustomer.pincode}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
