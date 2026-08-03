@@ -153,7 +153,7 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
     })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errs: Record<string, string> = {}
 
     if (!formData.name || !formData.name.trim()) {
@@ -194,18 +194,18 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       sizes: activeSizes,
       isSoldOut: activeSizes.length === 0,
       sizeStock: sizeStockMap,
+      designer_id: 1, // linked designer ID for backend API
       final_price: Math.round(finalPrice),
-      id: product?.id || Date.now(),
     } as Product
 
     if (product) {
-      editProduct(payload)
+      await editProduct(product.id, payload)
       toast({
         title: "Success",
         description: "Product updated successfully",
       })
     } else {
-      addProduct(payload)
+      await addProduct(payload)
       toast({
         title: "Success",
         description: "Product added successfully",

@@ -1,139 +1,119 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
-import { Search, UserCheck } from "lucide-react"
-
-export interface DesignerProfile {
-  id: number
-  name: string
-  age: number
-  avatar: string
-  cause: string
-  designs: string[]
-  teesSold: number
-  totalRoyalty: number
-  status: string
-}
-
-const designersDirectory: DesignerProfile[] = [
-  {
-    id: 1,
-    name: "Maahi",
-    age: 15,
-    avatar: "https://teesforacause.co/assets/story-aisha.jpg",
-    cause: "Women Empowerment (Geet Foundation)",
-    designs: ["Red Bean", "Matcha"],
-    teesSold: 820,
-    totalRoyalty: 4100,
-    status: "Active Creator",
-  },
-  {
-    id: 2,
-    name: "Deeksha Deulkar",
-    age: 19,
-    avatar: "https://teesforacause.co/assets/shop-musical-trance-front.jpg",
-    cause: "Mental Health & Hope",
-    designs: ["Stay in the Musical Trance"],
-    teesSold: 640,
-    totalRoyalty: 3200,
-    status: "Active Creator",
-  },
-  {
-    id: 3,
-    name: "Aarav Malkani",
-    age: 18,
-    avatar: "https://teesforacause.co/assets/shop-cn-tower-front.jpg",
-    cause: "Urban Youth Development",
-    designs: ["CN Tower"],
-    teesSold: 510,
-    totalRoyalty: 2550,
-    status: "Active Creator",
-  },
-  {
-    id: 4,
-    name: "Yasshita Karamchandani",
-    age: 17,
-    avatar: "https://teesforacause.co/assets/design-solace.png",
-    cause: "Artistic Expression & Youth Arts",
-    designs: ["Solace"],
-    teesSold: 420,
-    totalRoyalty: 2100,
-    status: "Active Creator",
-  },
-  {
-    id: 5,
-    name: "Janhavi More",
-    age: 18,
-    avatar: "https://teesforacause.co/assets/design-emotion-sound.png",
-    cause: "Youth Arts",
-    designs: ["Emotion and Sound"],
-    teesSold: 310,
-    totalRoyalty: 1550,
-    status: "Active Creator",
-  },
-  {
-    id: 6,
-    name: "Aayaan Shah",
-    age: 17,
-    avatar: "https://teesforacause.co/assets/design-strings-attached.png",
-    cause: "Music & Empowerment",
-    designs: ["Strings Attached"],
-    teesSold: 280,
-    totalRoyalty: 1400,
-    status: "Active Creator",
-  },
-]
+import { Button } from "@/components/ui/button"
+import { Search, UserCheck, Plus, Edit2, Trash2, RefreshCw, Mail, Phone, Calendar } from "lucide-react"
+import { useDesignersStore, ApiDesigner } from "@/store/designers"
+import { AddDesignerModal } from "@/components/dashboard/designers/add-designer-modal"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 export default function DesignersPage() {
-  const [search, setSearch] = useState("")
+  const {
+    items: designers,
+    loading,
+    error,
+    searchQuery,
+    statusFilter,
+    setSearchQuery,
+    setStatusFilter,
+    fetchDesigners,
+    deleteDesigner,
+  } = useDesignersStore()
 
-  const filteredDesigners = designersDirectory.filter(
-    (d) =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.cause.toLowerCase().includes(search.toLowerCase()) ||
-      d.designs.some((ds) => ds.toLowerCase().includes(search.toLowerCase()))
-  )
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedDesigner, setSelectedDesigner] = useState<ApiDesigner | null>(null)
+  const [designerToDelete, setDesignerToDelete] = useState<ApiDesigner | null>(null)
 
-  const totalRoyaltyPaid = designersDirectory.reduce((s, d) => s + d.totalRoyalty, 0)
-  const totalTeesSold = designersDirectory.reduce((s, d) => s + d.teesSold, 0)
+  useEffect(() => {
+    fetchDesigners()
+  }, [fetchDesigners])
+
+  const handleAddNew = () => {
+    setSelectedDesigner(null)
+    setIsModalOpen(true)
+  }
+
+  const handleEdit = (d: ApiDesigner) => {
+    setSelectedDesigner(d)
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (id: number) => {
+    await deleteDesigner(id)
+    setDesignerToDelete(null)
+  }
+
+  const filteredDesigners = designers.filter((d) => {
+    const query = searchQuery.toLowerCase()
+    const matchesSearch =
+      d.name.toLowerCase().includes(query) ||
+      (d.cause && d.cause.toLowerCase().includes(query)) ||
+      (d.email && d.email.toLowerCase().includes(query))
+    const matchesStatus = statusFilter === "all" || (d.status && d.status.toLowerCase() === statusFilter)
+    return matchesSearch && matchesStatus
+  })
+
+  const totalRoyaltyPaid = designers.reduce((s, d) => s + (d.totalRoyalty || 0), 0)
+  const totalTeesSold = designers.reduce((s, d) => s + (d.teesSold || 0), 0)
 
   return (
     <div className="p-6 space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Designers & Artists</h1>
+          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-[#8a734e]" />
+            Designers & Student Artists
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Manage registered creator profiles and royalty allocations
+          </p>
         </div>
 
-        {/* Header Summary Badges */}
+        {/* Header Summary Badges & Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 shadow-2xs">
             <span className="text-slate-500 font-medium">Active Artists:</span>
-            <span className="font-bold text-slate-900">{designersDirectory.length}</span>
+            <span className="font-bold text-slate-900">{designers.length}</span>
           </div>
           <div className="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 shadow-2xs">
-            <span className="text-slate-500 font-medium">Tees Distributed:</span>
+            <span className="text-slate-500 font-medium">Tees Sold:</span>
             <span className="font-bold text-slate-900">{totalTeesSold.toLocaleString("en-IN")}</span>
           </div>
           <div className="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs flex items-center gap-2 shadow-2xs">
-            <span className="text-slate-500 font-medium">3% Royalties Paid:</span>
-            <span className="font-bold text-slate-900">₹{totalRoyaltyPaid.toLocaleString("en-IN")}</span>
+            <span className="text-slate-500 font-medium">Royalties:</span>
+            <span className="font-bold text-[#735e38]">₹{totalRoyaltyPaid.toLocaleString("en-IN")}</span>
           </div>
+
+          <Button
+            onClick={handleAddNew}
+            className="bg-[#d4c4a8] hover:bg-[#c5b497] text-slate-900 font-bold text-xs h-8 gap-1.5 border border-[#c5b497] shadow-2xs cursor-pointer ml-1"
+          >
+            <Plus className="w-4 h-4" /> Add Designer
+          </Button>
         </div>
       </div>
 
       {/* Control Row: Search on Left */}
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="relative max-w-xs w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <Input
-            placeholder="Search designer, cause, or design…"
+            placeholder="Search designer, email, cause…"
             className="pl-8 text-xs bg-white border-slate-200 shadow-2xs h-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <button
+          onClick={() => fetchDesigners()}
+          disabled={loading}
+          className="bg-white hover:bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+        </button>
       </div>
 
       {/* Designer Cards Grid */}
@@ -141,51 +121,80 @@ export default function DesignersPage() {
         {filteredDesigners.map((designer) => (
           <div
             key={designer.id}
-            className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 flex flex-col justify-between space-y-3 hover:shadow-md transition-all"
+            className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 flex flex-col justify-between space-y-3 hover:shadow-md transition-all group"
           >
             <div className="space-y-3">
               {/* Avatar & Info Header */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#d4c4a8] bg-slate-100 shrink-0 shadow-2xs">
-                  <img
-                    src={designer.avatar}
-                    alt={designer.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).onerror = null;
-                      (e.target as HTMLImageElement).src = "https://teesforacause.co/assets/story-aisha.jpg";
-                    }}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 text-sm">{designer.name}</h3>
-                    <span className="text-[10px] font-bold text-[#735e38] bg-[#f4efe6] border border-[#e2d6c1] px-1.5 py-0.2 rounded-md">
-                      Age {designer.age}
-                    </span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#d4c4a8] bg-slate-100 shrink-0 shadow-2xs">
+                    <img
+                      src={designer.avatar || designer.image || "https://teesforacause.co/assets/story-aisha.jpg"}
+                      alt={designer.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        ;(e.target as HTMLImageElement).onerror = null
+                        ;(e.target as HTMLImageElement).src = "https://teesforacause.co/assets/story-aisha.jpg"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm leading-tight">{designer.name}</h3>
+                    {designer.email && (
+                      <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                        <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate max-w-[150px]">{designer.email}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {/* Edit & Delete Action Buttons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleEdit(designer)}
+                    title="Edit designer profile"
+                    className="p-1 rounded-md bg-slate-100 hover:bg-[#f4efe6] text-slate-600 hover:text-slate-900 border border-slate-200 transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setDesignerToDelete(designer)}
+                    title="Delete designer"
+                    className="p-1 rounded-md bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Cause Partner (NO HEART ICON) */}
+              {/* Bio & Details */}
+              {designer.description && (
+                <p className="text-xs text-slate-600 line-clamp-2 italic bg-slate-50 p-2 rounded-md border border-slate-100">
+                  "{designer.description}"
+                </p>
+              )}
+
+              {/* Cause Partner */}
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cause Partner</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cause & Impact</span>
                 <p className="text-xs font-semibold text-slate-900 bg-[#faf7f2] border border-[#e8e0d2] p-2 rounded-md">
-                  {designer.cause}
+                  {designer.cause || "Youth & Social Empowerment"}
                 </p>
               </div>
-
-              </div>
+            </div>
 
             {/* Footer Stats */}
-            <div className="pt-3 border-t border border-slate-100 flex items-center justify-between text-xs bg-[#fbf9f5] -mx-4 -mb-4 p-3 rounded-b-xl">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs bg-[#fbf9f5] -mx-4 -mb-4 p-3 rounded-b-xl">
               <div>
                 <span className="text-slate-400 block text-[10px] uppercase font-bold">Tees Distributed</span>
-                <span className="font-bold text-slate-900 text-xs">{designer.teesSold} units</span>
+                <span className="font-bold text-slate-900 text-xs">{designer.teesSold || 0} units</span>
               </div>
               <div className="text-right">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold">3% Royalty Share</span>
-                <span className="font-extrabold text-[#735e38] text-xs">₹{designer.totalRoyalty.toLocaleString("en-IN")}</span>
+                <span className="font-extrabold text-[#735e38] text-xs">
+                  ₹{(designer.totalRoyalty || 0).toLocaleString("en-IN")}
+                </span>
               </div>
             </div>
           </div>
@@ -194,10 +203,53 @@ export default function DesignersPage() {
         {filteredDesigners.length === 0 && (
           <div className="col-span-full text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-400">
             <UserCheck className="w-8 h-8 mx-auto opacity-40 mb-2" />
-            <p className="text-xs font-semibold text-slate-700">No designers match your search.</p>
+            <p className="text-xs font-semibold text-slate-700">No designers found.</p>
           </div>
         )}
       </div>
+
+      {/* Add / Edit Designer Modal */}
+      {isModalOpen && (
+        <AddDesignerModal
+          designer={selectedDesigner}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setSelectedDesigner(null)
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {designerToDelete && (
+        <Dialog open={!!designerToDelete} onOpenChange={(open) => !open && setDesignerToDelete(null)}>
+          <DialogContent className="max-w-md bg-white border border-slate-200 p-5 rounded-xl shadow-2xl text-slate-900">
+            <DialogHeader className="pb-2 border-b border-slate-100">
+              <DialogTitle className="text-base font-bold text-slate-900">
+                Confirm Designer Deletion
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-3 space-y-2 text-xs text-slate-600">
+              <p>
+                Are you sure you want to delete designer <span className="font-bold text-slate-900">"{designerToDelete.name}"</span>?
+              </p>
+              <p className="bg-rose-50 border border-rose-200 p-2.5 rounded-md text-rose-700">
+                This action will call the backend DELETE endpoint for designer #{designerToDelete.id}.
+              </p>
+            </div>
+
+            <DialogFooter className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => setDesignerToDelete(null)} className="h-8 text-xs font-semibold">
+                Cancel
+              </Button>
+              <Button onClick={() => handleDelete(designerToDelete.id)} className="h-8 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">
+                Delete Designer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
