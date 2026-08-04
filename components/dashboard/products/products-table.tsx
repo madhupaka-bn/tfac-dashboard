@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Edit2, Trash2, Search, Shirt, ExternalLink, AlertTriangle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
-import { Product } from "@/store/products"
+import { Product, formatImageUrl } from "@/store/products"
 
 interface ProductsTableProps {
   products: Product[]
@@ -22,11 +22,19 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
   const [productToDelete, setProductToDelete] = useState<Product | null>(null)
   const itemsPerPage = 12
 
-  const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.designer.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const getDesignerStr = (d: any) => {
+    if (!d) return "Student Designer"
+    if (typeof d === "string") return d
+    if (typeof d === "object") return d.name || d.designer_name || d.designer || "Student Designer"
+    return String(d)
+  }
+
+  const filtered = products.filter((p) => {
+    const nameMatch = (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    const designerStr = getDesignerStr(p.designer)
+    const designerMatch = designerStr.toLowerCase().includes(searchTerm.toLowerCase())
+    return nameMatch || designerMatch
+  })
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -74,9 +82,14 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                 {/* Cover Image Container */}
                 <div className="relative aspect-square overflow-hidden bg-slate-100">
                   <img
-                    src={product.image || "/placeholder.svg"}
+                    src={formatImageUrl(product.image)}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      ;(e.target as HTMLImageElement).onerror = null
+                      ;(e.target as HTMLImageElement).src =
+                        "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
+                    }}
                   />
 
                   {/* Badges */}
@@ -93,16 +106,17 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                 <div className="p-3 space-y-2.5 flex-1 flex flex-col justify-between">
                   <div className="space-y-1">
                     <a
-                      href={product.productUrl || "#"}
+                      href={product.productUrl && product.productUrl !== "#" ? product.productUrl : `http://localhost:3001/product/${product.slug || product.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-bold text-sm text-foreground hover:text-emerald-600 transition-colors line-clamp-1 flex items-center justify-between group/link"
+                      title="View product detail page on website"
                     >
                       <span>{product.name}</span>
                       <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover/link:opacity-100 text-muted-foreground shrink-0 transition-opacity" />
                     </a>
                     <p className="text-xs text-muted-foreground font-medium">
-                      Designer: <span className="text-foreground font-semibold">{product.designer}</span>
+                      Designer: <span className="text-foreground font-semibold">{getDesignerStr(product.designer)}</span>
                     </p>
                   </div>
 

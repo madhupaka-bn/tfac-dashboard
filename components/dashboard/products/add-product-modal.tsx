@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, X, Shirt, Star, User, ChevronDown } from "lucide-react"
+import { Plus, X, Shirt, Star, User, ChevronDown, Loader2 } from "lucide-react"
 
 interface Product {
   id: number
@@ -58,7 +58,9 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
   })
 
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const { addProduct, editProduct } = useProductsStore()
@@ -71,12 +73,14 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
 
   useEffect(() => {
     setErrors({})
+    setIsSubmitting(false)
     if (product) {
       setFormData(product)
       const existingImgs = product.images && product.images.length > 0
         ? product.images
         : product.image ? [product.image] : ["https://teesforacause.co/assets/shop-musical-trance-front.jpg"]
       setImagePreviews(existingImgs)
+      setUploadedFiles([])
 
       const initialStock: Record<string, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
       if (product.sizeStock) {
@@ -102,6 +106,7 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
         description: "",
       })
       setImagePreviews([])
+      setUploadedFiles([])
       setSizeStockMap({ XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 })
     }
   }, [product, isOpen])
@@ -124,23 +129,17 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
     const files = e.target.files
     if (files && files.length > 0) {
       const fileList = Array.from(files)
-      const readPromises = fileList.map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(file)
-        })
-      })
+      setUploadedFiles((prev) => [...prev, ...fileList])
 
-      Promise.all(readPromises).then((newUrls) => {
-        setImagePreviews((prev) => [...prev, ...newUrls])
-        if (errors.images) setErrors((prev) => ({ ...prev, images: "" }))
-      })
+      const newUrls = fileList.map((file) => URL.createObjectURL(file))
+      setImagePreviews((prev) => [...prev, ...newUrls])
+      if (errors.images) setErrors((prev) => ({ ...prev, images: "" }))
     }
   }
 
   const removeImage = (index: number) => {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const setCoverImage = (index: number) => {
@@ -150,9 +149,17 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       const [selected] = copy.splice(index, 1)
       return [selected, ...copy]
     })
+    setUploadedFiles((prev) => {
+      if (index >= prev.length) return prev
+      const copy = [...prev]
+      const [selected] = copy.splice(index, 1)
+      return [selected, ...copy]
+    })
   }
 
   const handleSubmit = async () => {
+    if (isSubmitting) return
+
     const errs: Record<string, string> = {}
 
     if (!formData.name || !formData.name.trim()) {
@@ -182,39 +189,70 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
     }
 
     setErrors({})
-    const activeSizes = ALL_SIZES.filter((s) => (sizeStockMap[s] ?? 0) > 0)
-    const finalPrice = (formData.price || 0) - ((formData.discount || 0) / 100) * (formData.price || 0)
-    const primaryImage = imagePreviews[0] || formData.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
+    setIsSubmitting(true)
 
-    const selectedDesignerObj = designers.find((d) => d.id === formData.designer_id || d.name === formData.designer)
+    try {
+      const activeSizes = ALL_SIZES.filter((s) => (sizeStockMap[s] ?? 0) > 0)
+      const finalPrice = (formData.price || 0) - ((formData.discount || 0) / 100) * (formData.price || 0)
+      const primaryImage = imagePreviews[0] || formData.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
 
-    const payload = {
-      ...formData,
-      image: primaryImage,
-      images: imagePreviews.length > 0 ? imagePreviews : [primaryImage],
-      sizes: activeSizes,
-      isSoldOut: activeSizes.length === 0,
-      sizeStock: sizeStockMap,
-      designer_id: formData.designer_id || selectedDesignerObj?.id || 1,
-      designer: formData.designer || selectedDesignerObj?.name || "Student Designer",
-      final_price: Math.round(finalPrice),
-    } as Product
+      const selectedDesignerObj = designers.find((d) => d.id === formData.designer_id || d.name === formData.designer)
 
-    if (product) {
-      await editProduct(product.id, payload)
+      const payload = {
+        ...formData,
+        image: primaryImage,
+        images: imagePreviews.length > 0 ? imagePreviews : [primaryImage],
+        sizes: activeSizes,
+        isSoldOut: activeSizes.length === 0,
+        sizeStock: sizeStockMap,
+        designer_id: formData.designer_id || selectedDesignerObj?.id || 1,
+        designer: formData.designer || selectedDesignerObj?.name || "Student Designer",
+        final_price: Math.round(finalPrice),
+      } as Product
+
+      const coverImageFile = uploadedFiles.length > 0 ? uploadedFiles[0] : null
+      const additionalImageFiles = uploadedFiles.length > 1 ? uploadedFiles.slice(1) : []
+
+      if (product) {
+        const success = await editProduct(product.id, payload, coverImageFile, additionalImageFiles)
+        if (success) {
+          toast({
+            title: "Success",
+            description: "Product updated successfully",
+          })
+          onClose()
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to update product. Please check form inputs.",
+            variant: "destructive",
+          })
+        }
+      } else {
+        const success = await addProduct(payload, coverImageFile, additionalImageFiles)
+        if (success) {
+          toast({
+            title: "Success",
+            description: "Product added successfully",
+          })
+          onClose()
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to create product. Please check form inputs.",
+            variant: "destructive",
+          })
+        }
+      }
+    } catch (err: any) {
       toast({
-        title: "Success",
-        description: "Product updated successfully",
+        title: "Error",
+        description: err?.message || "Failed to save product",
+        variant: "destructive",
       })
-    } else {
-      await addProduct(payload)
-      toast({
-        title: "Success",
-        description: "Product added successfully",
-      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    onClose()
   }
 
   return (
@@ -465,16 +503,27 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
             type="button"
             variant="outline"
             onClick={onClose}
-            className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs h-9 px-4 cursor-pointer"
+            disabled={isSubmitting}
+            className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs h-9 px-4 cursor-pointer disabled:opacity-50"
           >
             Cancel
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 px-5 shadow-xs cursor-pointer"
+            disabled={isSubmitting}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 px-5 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {product ? "Save Changes" : "Create Product"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                {product ? "Saving Changes..." : "Creating Product..."}
+              </>
+            ) : product ? (
+              "Save Changes"
+            ) : (
+              "Create Product"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

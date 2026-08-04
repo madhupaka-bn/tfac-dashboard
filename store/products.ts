@@ -24,6 +24,14 @@ export interface Product {
   care?: string
 }
 
+export function formatImageUrl(url?: string): string {
+  if (!url) return "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
+  if (typeof url === "string" && url.includes("cloudinary.com") && url.includes("/raw/upload/")) {
+    return url.replace("/raw/upload/", "/image/upload/")
+  }
+  return url
+}
+
 const initialWebsiteProducts: Product[] = [
   {
     id: 1,
@@ -152,13 +160,28 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       const resData = await response.json()
 
       if (response.ok && resData.success && Array.isArray(resData.data)) {
-        const mapped = resData.data.map((p: any) => ({
-          ...p,
-          id: p.product_id || p.id,
-          designer: p.designer || p.designer_name || "Student Designer",
-          image: p.image || p.images?.[0] || "",
-          images: p.images || [p.image].filter(Boolean),
-        }))
+        const getDesignerName = (d: any) => {
+          if (!d) return "Student Designer"
+          if (typeof d === "string") return d
+          if (typeof d === "object") return d.name || d.designer_name || d.designer || "Student Designer"
+          return "Student Designer"
+        }
+
+        const mapped = resData.data.map((p: any) => {
+          const rawImg = p.image || p.images?.[0] || ""
+          const formattedImg = formatImageUrl(rawImg)
+          const formattedImgs = (p.images && p.images.length > 0 ? p.images : [rawImg])
+            .filter(Boolean)
+            .map((img: string) => formatImageUrl(img))
+
+          return {
+            ...p,
+            id: p.product_id || p.id,
+            designer: getDesignerName(p.designer || p.designer_name),
+            image: formattedImg,
+            images: formattedImgs,
+          }
+        })
 
         set({
           items: mapped,
@@ -269,11 +292,11 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         "data",
         JSON.stringify({
           name: productData.name || "",
-          designer_id: productData.designer_id || 1,
+          designer_id: Number(productData.designer_id || 1),
           cause: productData.cause || "Social Impact",
-          price: productData.price || 799,
-          discount: productData.discount || 0,
-          final_price: productData.final_price || productData.price || 799,
+          price: Number(productData.price || 799),
+          discount: Number(productData.discount || 0),
+          final_price: Number(productData.final_price || productData.price || 799),
           sizes: productData.sizes || ["S", "M", "L", "XL"],
           sizeStock: productData.sizeStock || { XS: 0, S: 2, M: 3, L: 6, XL: 2, XXL: 0 },
           description: productData.description || "",
@@ -295,11 +318,17 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         })
       }
 
-      await fetch(`${API_BASE}/${id}`, {
+      const response = await fetch(`${API_BASE}/${id}`, {
         method: "PUT",
         headers: API_HEADERS,
         body: formData,
       })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("PUT Product Error response:", errorText)
+        throw new Error(`Failed to update product (HTTP ${response.status})`)
+      }
 
       set((state) => ({
         items: state.items.map((item) =>
@@ -307,16 +336,16 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
             ? {
                 ...item,
                 ...productData,
-                ...(coverImageFile ? { image: URL.createObjectURL(coverImageFile) } : {}),
               }
             : item
         ),
         loading: false,
       }))
 
-      get().fetchProducts()
+      await get().fetchProducts()
       return true
     } catch (err: any) {
+      console.error("Error updating product:", err)
       set({ loading: false, error: err?.message })
       return false
     }
