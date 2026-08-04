@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useProductsStore } from "@/store/products"
+import { useDesignersStore } from "@/store/designers"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,7 @@ interface Product {
   id: number
   name: string
   designer: string
+  designer_id?: number
   price: number
   discount: number
   final_price: number
@@ -32,20 +34,11 @@ interface AddProductModalProps {
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"]
 
-const DESIGNER_OPTIONS = [
-  "Maahi",
-  "Deeksha Deulkar",
-  "Aarav Malkani",
-  "Yasshita Karamchandani",
-  "Janhavi More",
-  "Aayaan Shah",
-  "Ananya Joshi",
-]
-
 export function AddProductModal({ product, isOpen, onClose }: AddProductModalProps) {
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     designer: "",
+    designer_id: undefined,
     cause: "Casual",
     price: undefined,
     discount: 0,
@@ -69,7 +62,12 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const { addProduct, editProduct } = useProductsStore()
+  const { items: designers, fetchDesigners } = useDesignersStore()
   const { toast } = useToast()
+
+  useEffect(() => {
+    fetchDesigners()
+  }, [fetchDesigners])
 
   useEffect(() => {
     setErrors({})
@@ -95,6 +93,7 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       setFormData({
         name: "",
         designer: "",
+        designer_id: undefined,
         cause: "Casual",
         price: undefined,
         discount: 0,
@@ -160,7 +159,7 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       errs.name = "Product name is required"
     }
 
-    if (!formData.designer) {
+    if (!formData.designer && !formData.designer_id) {
       errs.designer = "Please select a designer"
     }
 
@@ -187,6 +186,8 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
     const finalPrice = (formData.price || 0) - ((formData.discount || 0) / 100) * (formData.price || 0)
     const primaryImage = imagePreviews[0] || formData.image || "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
 
+    const selectedDesignerObj = designers.find((d) => d.id === formData.designer_id || d.name === formData.designer)
+
     const payload = {
       ...formData,
       image: primaryImage,
@@ -194,7 +195,8 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
       sizes: activeSizes,
       isSoldOut: activeSizes.length === 0,
       sizeStock: sizeStockMap,
-      designer_id: 1, // linked designer ID for backend API
+      designer_id: formData.designer_id || selectedDesignerObj?.id || 1,
+      designer: formData.designer || selectedDesignerObj?.name || "Student Designer",
       final_price: Math.round(finalPrice),
     } as Product
 
@@ -253,9 +255,15 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
               <div className="relative">
                 <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <select
-                  value={formData.designer || ""}
+                  value={formData.designer_id ? String(formData.designer_id) : (formData.designer || "")}
                   onChange={(e) => {
-                    setFormData({ ...formData, designer: e.target.value })
+                    const selVal = e.target.value
+                    const found = designers.find((d) => String(d.id) === selVal || d.name === selVal)
+                    setFormData({
+                      ...formData,
+                      designer_id: found ? found.id : Number(selVal) || undefined,
+                      designer: found ? found.name : selVal,
+                    })
                     if (errors.designer) setErrors((prev) => ({ ...prev, designer: "" }))
                   }}
                   className={`w-full pl-9 pr-7 h-9 text-xs font-semibold text-slate-900 bg-white hover:border-slate-300 rounded-md outline-none transition-all appearance-none cursor-pointer ${
@@ -264,14 +272,14 @@ export function AddProductModal({ product, isOpen, onClose }: AddProductModalPro
                       : "border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                   }`}
                 >
-                  <option value="" disabled>Select Designer...</option>
-                  {DESIGNER_OPTIONS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
+                  <option value="" disabled>Select Designer from API...</option>
+                  {designers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} {d.email ? `(${d.email})` : ""}
                     </option>
                   ))}
-                  {formData.designer && !DESIGNER_OPTIONS.includes(formData.designer) && (
-                    <option value={formData.designer}>{formData.designer}</option>
+                  {designers.length === 0 && (
+                    <option value="" disabled>No designers found in DB - Add a designer first</option>
                   )}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
