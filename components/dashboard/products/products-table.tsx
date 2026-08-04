@@ -86,9 +86,9 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
-                      ;(e.target as HTMLImageElement).onerror = null
-                      ;(e.target as HTMLImageElement).src =
-                        "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
+                      ; (e.target as HTMLImageElement).onerror = null
+                        ; (e.target as HTMLImageElement).src =
+                          "https://teesforacause.co/assets/shop-musical-trance-front.jpg"
                     }}
                   />
 
@@ -120,7 +120,7 @@ export function ProductsTable({ products, loading, onEdit, onDelete }: ProductsT
                     </p>
                   </div>
 
-                  {/* Available Sizes / Sold Out Tag */}
+                  {/* Available Sizes & Sold Out Tag */}
                   <div className="flex items-center gap-1 flex-wrap min-h-[24px]">
                     {!isSoldOut && product.sizes && product.sizes.length > 0 ? (
                       <>
