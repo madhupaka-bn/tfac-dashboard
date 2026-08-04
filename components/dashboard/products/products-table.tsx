@@ -7,21 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Edit2, Trash2, Search, Shirt, ExternalLink, AlertTriangle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
-interface Product {
-  id: number
-  slug?: string
-  name: string
-  designer: string
-  price: number
-  discount: number
-  final_price: number
-  sizes: string[]
-  sizeStock?: Record<string, number>
-  isSoldOut?: boolean
-  image: string
-  productUrl?: string
-  description: string
-}
+import { Product } from "@/store/products"
 
 interface ProductsTableProps {
   products: Product[]

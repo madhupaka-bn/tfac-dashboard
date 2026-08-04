@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Mail, Phone, Calendar, Upload, Loader2, X, Sparkles } from "lucide-react"
+import PhoneInput from "react-phone-input-2"
+import "react-phone-input-2/lib/style.css"
 
 interface AddDesignerModalProps {
   designer: ApiDesigner | null
@@ -82,8 +84,8 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
     }
     if (!formData.phone_number.trim()) {
       newErrs.phone_number = "Phone number is required"
-    } else if (!/^\d{10}$/.test(formData.phone_number.replace(/\D/g, ""))) {
-      newErrs.phone_number = "Enter valid 10-digit mobile number"
+    } else if (formData.phone_number.replace(/\D/g, "").length < 7) {
+      newErrs.phone_number = "Enter valid mobile number"
     }
     setErrors(newErrs)
     return Object.keys(newErrs).length === 0
@@ -110,17 +112,24 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md w-full max-h-[85vh] p-5 flex flex-col gap-0 overflow-hidden bg-white border border-slate-200 rounded-xl shadow-2xl text-slate-900">
-        <DialogHeader className="shrink-0 pb-3 border-b border-slate-100">
-          <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <User className="w-4 h-4 text-[#8a734e]" />
-            {designer ? "Edit Designer Profile" : "Add New Designer"}
+      <DialogContent className="sm:max-w-xl w-full max-h-[90vh] p-6 sm:p-7 flex flex-col gap-0 overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xl text-slate-900">
+        <DialogHeader className="shrink-0 pb-4 border-b border-slate-100">
+          <DialogTitle className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#f4efe6] text-[#735e38] flex items-center justify-center border border-[#e2d6c1] shrink-0">
+              <User className="w-4 h-4" />
+            </div>
+            <div>
+              <span>{designer ? "Edit Designer Profile" : "Add New Designer"}</span>
+              <p className="text-xs font-normal text-slate-500 mt-0.5">
+                {designer ? "Update designer credentials and biography" : "Enter details to create a new designer profile"}
+              </p>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-1 pt-3 space-y-3">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-1 pt-4 space-y-4">
           {/* Name */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-slate-800">
               Full Name <span className="text-rose-500">*</span>
             </Label>
@@ -128,14 +137,14 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. Deeksha Deulkar"
-              className={`h-9 text-xs ${errors.name ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
+              className={`h-10 text-xs sm:text-sm bg-white ${errors.name ? "border-rose-500 focus-visible:ring-rose-500" : "border-slate-200"}`}
             />
             {errors.name && <p className="text-[11px] text-rose-600 font-semibold">{errors.name}</p>}
           </div>
 
           {/* Email & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-800">
                 Email Address <span className="text-rose-500">*</span>
               </Label>
@@ -144,21 +153,33 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="deeksha@example.com"
-                className={`h-9 text-xs ${errors.email ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
+                className={`h-10 text-xs sm:text-sm bg-white ${errors.email ? "border-rose-500 focus-visible:ring-rose-500" : "border-slate-200"}`}
               />
               {errors.email && <p className="text-[11px] text-rose-600 font-semibold">{errors.email}</p>}
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-800">
                 Phone Number <span className="text-rose-500">*</span>
               </Label>
-              <Input
-                type="tel"
+              <PhoneInput
+                country={"in"}
+                enableSearch={true}
+                searchPlaceholder="Search country..."
                 value={formData.phone_number}
-                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                onChange={(phone) => {
+                  setFormData((prev) => ({ ...prev, phone_number: phone }))
+                  if (errors.phone_number) {
+                    setErrors((prev) => ({ ...prev, phone_number: "" }))
+                  }
+                }}
                 placeholder="9876543210"
-                className={`h-9 text-xs ${errors.phone_number ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
+                containerClass="!w-full"
+                inputClass={`!w-full !h-10 !text-xs sm:!text-sm !bg-white !text-slate-900 !border ${
+                  errors.phone_number ? "!border-rose-500 focus-visible:!ring-rose-500" : "!border-slate-200"
+                } !rounded-md`}
+                buttonClass="!bg-slate-50 !border-slate-200 !rounded-l-md"
+                dropdownClass="!bg-white !text-slate-900 !text-xs"
               />
               {errors.phone_number && (
                 <p className="text-[11px] text-rose-600 font-semibold">{errors.phone_number}</p>
@@ -167,23 +188,23 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
           </div>
 
           {/* Date of Birth & Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-800">Date of Birth</Label>
               <Input
                 type="date"
                 value={formData.dob}
                 onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                className="h-9 text-xs"
+                className="h-10 text-xs sm:text-sm bg-white border-slate-200"
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-800">Status</Label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full h-9 px-3 text-xs border border-slate-200 rounded-md bg-white font-medium outline-none cursor-pointer"
+                className="w-full h-10 px-3 text-xs sm:text-sm border border-slate-200 rounded-md bg-white font-medium outline-none cursor-pointer hover:border-slate-300 transition-colors"
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -192,22 +213,22 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
           </div>
 
           {/* Bio / Description */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-slate-800">Bio & Description</Label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Short bio, artist story, cause partnership..."
-              className="w-full h-16 p-2 text-xs border border-slate-200 rounded-md outline-none resize-none font-medium"
+              className="w-full h-24 p-3 text-xs sm:text-sm border border-slate-200 rounded-lg outline-none resize-none font-medium text-slate-800 focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition-all placeholder:text-slate-400"
             />
           </div>
 
           {/* Avatar Image Upload */}
-          <div className="space-y-1">
+          <div className="space-y-1.5 pt-1">
             <Label className="text-xs font-semibold text-slate-800">Designer Photo / Avatar</Label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
               {previewUrl ? (
-                <div className="relative w-14 h-14 rounded-full overflow-hidden border border-slate-200 shrink-0">
+                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 shrink-0 shadow-xs">
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                   <button
                     type="button"
@@ -215,30 +236,33 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
                       setPreviewUrl(null)
                       setSelectedFile(null)
                     }}
-                    className="absolute top-0 right-0 bg-rose-600 text-white rounded-full p-0.5"
+                    className="absolute top-0 right-0 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1 shadow-sm transition-colors cursor-pointer"
+                    title="Remove image"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-14 h-14 rounded-full border-2 border-dashed border-slate-300 hover:border-[#8a734e] flex flex-col items-center justify-center text-slate-400 shrink-0 cursor-pointer"
+                  className="w-16 h-16 rounded-full border-2 border-dashed border-slate-300 hover:border-[#8a734e] bg-white flex flex-col items-center justify-center text-slate-400 shrink-0 cursor-pointer transition-colors shadow-2xs"
                 >
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-5 h-5 text-slate-400" />
                 </button>
               )}
-              <div className="text-xs text-slate-500">
+              <div className="space-y-1">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-8 text-xs font-semibold border-slate-200"
+                  className="h-9 text-xs font-semibold border-slate-300 bg-white hover:bg-slate-50 cursor-pointer shadow-2xs"
                 >
+                  <Upload className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
                   Choose Image File
                 </Button>
+                <p className="text-[11px] text-slate-500">JPG, PNG or WEBP up to 5MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -252,23 +276,23 @@ export function AddDesignerModal({ designer, isOpen, onClose }: AddDesignerModal
           </div>
 
           {/* Footer buttons */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="h-8 text-xs font-semibold border-slate-200"
+              className="h-9 px-4 text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-8 text-xs font-semibold bg-[#d4c4a8] hover:bg-[#c5b497] text-slate-900 border border-[#c5b497]"
+              className="h-9 px-5 text-xs font-bold bg-[#d4c4a8] hover:bg-[#c5b497] text-slate-900 border border-[#c5b497] shadow-2xs cursor-pointer transition-colors"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Saving...
                 </>
               ) : designer ? (

@@ -203,39 +203,6 @@ export default function DashboardHome() {
         />
       </div>
 
-      {/* ── Recent Cause Purchases (Reusing OrdersTable Component) ──────────────────────── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-emerald-600" /> Recent Cause Purchases
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Live transactions supporting NGO empowerment programs</p>
-          </div>
-          <a
-            href="/dashboard/orders"
-            className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
-          >
-            View all orders <ArrowUpRight className="w-3.5 h-3.5" />
-          </a>
-        </div>
-
-        {/* Reused OrdersTable Component for 100% Consistency */}
-        <OrdersTable
-          orders={transformedOrders}
-          loading={false}
-          currentPage={1}
-          totalPages={1}
-          search=""
-          status="all"
-          onSearch={() => {}}
-          onStatusChange={() => {}}
-          onPageChange={() => {}}
-          hideFilterRow={true}
-          hidePagination={true}
-        />
-      </div>
-
       {/* ── Impact Charts at bottom ─────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Donut Model Chart */}
@@ -320,6 +287,39 @@ export default function DashboardHome() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      </div>
+
+      {/* ── Recent Cause Purchases (Reusing OrdersTable Component) ──────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4 text-emerald-600" /> Recent Cause Purchases
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">Live transactions supporting NGO empowerment programs</p>
+          </div>
+          <a
+            href="/dashboard/orders"
+            className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+          >
+            View all orders <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+
+        {/* Reused OrdersTable Component for 100% Consistency */}
+        <OrdersTable
+          orders={transformedOrders}
+          loading={false}
+          currentPage={1}
+          totalPages={1}
+          search=""
+          status="all"
+          onSearch={() => {}}
+          onStatusChange={() => {}}
+          onPageChange={() => {}}
+          hideFilterRow={true}
+          hidePagination={true}
+        />
       </div>
     </div>
   )
